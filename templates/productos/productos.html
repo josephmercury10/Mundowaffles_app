@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+<body>
+    {% block left_panel %}
+    <div class="container-fluid px-4">
+        <h1 class="mt-4 text-center">Productos</h1>
+        <ol class="breadcrumb mb-4">
+            <li class="breadcrumb-item active"><a href="#">Inicio</a></li>
+            <li class="breadcrumb-item active">Productos</li>
+        </ol>
+        <div class="mb-4">
+            <a href="{{ url_for('productos.create_producto') }}">
+                <button type="button" class="btn btn-primary">Añadir nuevo registro</button>
+            </a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Tabla Productos
+            </div>
+        </div>
+
+        <div class="card-body">
+            <table id="datatablesSimple" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Marca</th>
+                        <th>Presentación</th>
+                        <th>Categorías</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.codigo }}</td>
+                        <td>{{ producto.nombre }}</td>
+                        <td>{{ producto.descripcion }}</td>
+                        <td>{{ producto.marca.caracteristica.nombre }}</td>
+                        <td>{{ producto.presentacion.caracteristica.nombre }}</td>
+                        <td>
+                            {% for categoria_producto in producto.categorias %}
+                                <span class="badge bg-secondary">{{ categoria_producto.categoria.caracteristica.nombre }}</span>
+                            {% endfor %}
+                        </td>
+                        {% if producto.estado %}
+                        <td>
+                            <div>
+                                <span class="badge bg-success">Activo</span>
+                            </div>
+                        </td>
+                        {% else %}
+                        <td>
+                            <div>
+                                <span class="badge bg-danger">Eliminado</span>
+                            </div>
+                        </td>
+                        {% endif %}
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    {% endblock %}
+
+    {% block right_panel %}
+    {% endblock %}
+</body>
