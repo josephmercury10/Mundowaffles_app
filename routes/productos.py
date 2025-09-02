@@ -1,5 +1,6 @@
 from flask import Blueprint,  render_template, redirect, url_for, flash, request
 from src.models.Producto_model import Producto
+from src.models.Producto_model import CategoriaProducto
 from src.models.Caracteristica_model import Caracteristica
 from src.models.Marca_model import Marca
 from src.models.Presentacion_model import Presentacion
@@ -59,8 +60,15 @@ def create_producto():
                     )                        
                     db.session.add(nuevo_producto)
                     db.session.flush()
-                    
-                    nuevo_producto.categorias = [Categoria.query.get(int(categoria_id)) for categoria_id in form.categorias.data]
+
+                    for categoria_id in form.categorias.data:
+                        # Crear una nueva entrada en la tabla pivote
+                        categoria_producto = CategoriaProducto(
+                            producto_id=nuevo_producto.id,
+                            categoria_id=int(categoria_id)
+                        )
+                        db.session.add(categoria_producto)
+                        
                     db.session.commit()
                     flash('Producto creado exitosamente', 'success')
                     return redirect(url_for('productos.get_productos'))
@@ -76,3 +84,50 @@ def create_producto():
     return render_template('productos/create.html', form=form)
 
 
+@productos_bp.route('/update/<int:id>', methods=['GET', 'POST'])
+def update_producto(id):
+    producto = Producto.query.get_or_404(id)
+    form = ProductoForm(obj=producto)
+
+    form.marcas.choices = [(str(marca.id), marca.caracteristica.nombre)
+                          for marca in Marca.query
+                          .join(Marca.caracteristica)
+                          .filter(Caracteristica.estado == 1)
+                          .all()]
+
+    form.presentaciones.choices = [(str(p.id), p.caracteristica.nombre)
+                                    for p in Presentacion.query
+                                    .join(Presentacion.caracteristica)
+                                    .filter(Caracteristica.estado == 1)
+                                    .all()]
+
+    form.categorias.choices = [(str(c.id), c.caracteristica.nombre)
+                                for c in Categoria.query
+                                .join(Categoria.caracteristica)
+                                .filter(Caracteristica.estado == 1)
+                                .all()]
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            producto.codigo = form.codigo.data
+            producto.nombre = form.nombre.data
+            producto.descripcion = form.descripcion.data
+            producto.fecha_vencimiento = form.fechaVencimiento.data
+            producto.img_path = form.imagen.data.filename if form.imagen.data else None
+            producto.marca_id = form.marcas.data
+            producto.presentacione_id = form.presentaciones.data
+
+            # Actualizar las categorías
+            producto.categorias.clear()
+            for categoria_id in form.categorias.data:
+                categoria_producto = CategoriaProducto(
+                    producto_id=producto.id,
+                    categoria_id=int(categoria_id)
+                )
+                db.session.add(categoria_producto)
+
+            db.session.commit()
+            flash('Producto actualizado exitosamente', 'success')
+            return redirect(url_for('productos.get_productos'))
+
+    return render_template('productos/update.html', form=form, producto=producto)
