@@ -21,7 +21,7 @@ def create_cliente():
     
     if request.method == "POST":
         if form.validate_on_submit():
-            clienteID = Cliente.query.filter_by(numero_documento=form.numero_documento.data).first()
+            clienteID = Cliente.query.join(Persona).filter(Persona.numero_documento == form.numero_documento.data).first()
             if clienteID is None:
                 try:
                     # Primero crear la persona
