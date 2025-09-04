@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, SubmitField, IntegerField, DateField, FileField, SelectMultipleField
-from wtforms.validators import DataRequired, NumberRange, Optional, length
+from wtforms import StringField, TextAreaField, SelectField, SubmitField, DateField, FileField, SelectMultipleField
+from wtforms.validators import DataRequired, Optional, length, ValidationError
 from flask_wtf.file import FileAllowed
+import re
 
 
 #creamos las clases de cada formulario
@@ -34,3 +35,43 @@ class ProductoForm(FlaskForm):
     presentaciones = SelectField('Presentación:', choices=[], validators=[DataRequired()])
     categorias = SelectMultipleField('Categorías:', choices=[], validators=[DataRequired("Seleccione al menos una categoría.")])
     submit = SubmitField('Guardar')
+    
+    
+class ClienteForm(FlaskForm):
+    razon_social = StringField(validators=[DataRequired()])
+    direccion = StringField('Dirección:', validators=[DataRequired()])
+    tipo_persona = SelectField('Tipo de Persona:', choices=[('Persona natural', 'Persona natural'), ('Persona Juridica', 'Persona Juridica')], validators=[DataRequired()])
+    documento_id = SelectField('Tipo de Documento:', choices=[], validators=[DataRequired()])
+    numero_documento = StringField('Número de Documento:', validators=[DataRequired(), length(min=1, max=10)])
+    submit = SubmitField('Guardar')
+    
+    def validate_numero_documento(self, field):
+        tipo_doc = self.documento_id.data
+        numero = field.data 
+
+        if tipo_doc == '1':
+            # Validación de RUT chileno
+            if not re.match(r'^\d{7,8}-[\dkK]$', numero):
+                raise ValidationError('Formato de RUT inválido. Debe ser como: 12345678-9')
+            
+            # Validación del dígito verificador
+            rut = numero.replace('-', '')
+            dv = rut[-1].upper()
+            rut = rut[:-1]
+            
+            # Calcular dígito verificador
+            suma = 0
+            multiplo = 2
+            for r in reversed(rut):
+                suma += int(r) * multiplo
+                multiplo = multiplo + 1 if multiplo < 7 else 2
+            
+            dv_esperado = '0123456789K'[11 - (suma % 11)]
+            
+            if dv != str(dv_esperado):
+                raise ValidationError('RUT inválido - dígito verificador incorrecto')
+            
+        elif tipo_doc == '2':
+            # Validación de pasaporte
+            if not re.match(r'^[A-Za-z0-9]{6,12}$', numero):
+                raise ValidationError('El pasaporte debe tener entre 6 y 12 caracteres alfanuméricos')

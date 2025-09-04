@@ -106,6 +106,17 @@ def update_producto(id):
                                 .join(Categoria.caracteristica)
                                 .filter(Caracteristica.estado == 1)
                                 .all()]
+    
+    # Establecer los valores seleccionados previamente
+    if request.method == 'GET':
+        form.marcas.data = str(producto.marca_id)
+        form.presentaciones.data = str(producto.presentacione_id)
+        
+        # Obtener IDs de categorías existentes
+        categorias_actuales = db.session.query(CategoriaProducto.categoria_id)\
+            .filter(CategoriaProducto.producto_id == producto.id)\
+            .all()
+        form.categorias.data = [str(cat_id[0]) for cat_id in categorias_actuales]
 
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -131,3 +142,20 @@ def update_producto(id):
             return redirect(url_for('productos.get_productos'))
 
     return render_template('productos/update.html', form=form, producto=producto)
+
+@productos_bp.route('/delete/<int:id>', methods=['POST'])
+def delete_producto(id):
+    try:
+        producto = Producto.query.get_or_404(id)
+
+        # Cambiar el estado
+        producto.estado = 0 if producto.estado else 1
+        db.session.commit()
+
+        mensaje = "Producto restaurado" if producto.estado else "Producto eliminado"
+        flash(mensaje, 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al procesar la solicitud', 'danger')
+
+    return redirect(url_for('productos.get_productos'))

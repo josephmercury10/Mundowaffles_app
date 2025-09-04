@@ -48,7 +48,7 @@
                         
                         <!-----------------------Marcas-------------------------------------------->
                         <div class="col-md-6 mb-2">
-                            {{ form.marcas.label(class="form-label", placeholder="Seleccione una marca") }}
+                            {{ form.marcas.label(class="form-label") }}
                             {{ form.marcas(class="form-control") }}
                         </div>
                         <!-----------------------Presentaciones-------------------------------------------->
@@ -59,7 +59,8 @@
                         <!-----------------------Categorías-------------------------------------------->
                         <div class="col-md-6 mb-2">
                             {{ form.categorias.label(class="form-label") }}
-                            {{ form.categorias(class="form-control", multiple=True, size=3, title="Seleccione las categorías") }}
+                            <small class="text-muted d-block mb-2">Mantenga presionada la tecla Ctrl (Command en Mac) para seleccionar múltiples categorías</small>
+                            {{ form.categorias(class="form-control", multiple=True, size=5, title="Seleccione las categorías") }}
                         </div>
 
                         <div class="col-12 text-center">
