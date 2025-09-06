@@ -26,10 +26,14 @@
         <div class="logo">Mundo Waffles</div>
         <div class="nav-icons">
           <div class="nav-icon" title="caracteristicas">
-            <a href="{{ url_for('caracteristicas.get_caracteristicas') }}">📊</a>
+            <a href="{{ url_for('caracteristicas.get_caracteristicas') }}">
+              <i class="bi bi-cart4"></i>
+            </a>
           </div>
           <div class="nav-icon" title="marcas">
-            <a href="{{ url_for('marcas.get_marcas') }}">🧮</a>
+            <a href="{{ url_for('marcas.get_marcas') }}">
+              <i class="bi bi-brush"></i>
+            </a>
           </div>
           <div class="nav-icon" title="categorias">
             <a href="{{ url_for('categorias.get_categorias') }}">🔍</a>

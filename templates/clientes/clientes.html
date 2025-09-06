@@ -42,20 +42,78 @@
                             <p class="fw-normal mb-1">{{ cliente.persona.numero_documento }}</p>
                         </td>
                         <td>{{ 'Natural' if cliente.persona.tipo_persona == 'Persona natural' else 'Jurídica' }}</td>
-                        <td>{{ 'Activo' if cliente.persona.estado == 1 else 'Inactivo' }}</td>
+                        {% if cliente.persona.estado %}
                         <td>
-                            <!-- Aquí puedes agregar botones para editar o eliminar -->
-                            <a href="#" class="btn btn-sm btn-warning">Editar</a>
-                            <a href="#" class="btn btn-sm btn-danger">Eliminar</a>
+                            <div>
+                                <span class="badge bg-success">Activo</span>
+                            </div>
+                        </td>
+                        {% else %}
+                        <td>
+                            <div>
+                                <span class="badge bg-danger">Eliminado</span>
+                            </div>
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+                                <a href="{{ url_for('clientes.update_cliente', cliente_id=cliente.id) }}" class="btn btn-sm btn-warning">Editar</a>
+                                <a href="#" class="btn btn-sm btn-info">Ver</a>
+                                {% if cliente.persona.estado %}
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmModal-{{ cliente.id }}">Eliminar</button>
+                                {% else %}
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal-{{ cliente.id }}">Restaurar</button>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+             <!-- Modal de eliminacion/restauración cliente -->
+{% for cliente in clientes %}
+<div class="modal fade" id="confirmModal-{{ cliente.id }}" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">
+                    {% if cliente.persona.estado %}
+                    Confirmar Eliminación
+                    {% else %}
+                    Confirmar Restauración
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if cliente.persona.estado %}
+                ¿Estás seguro de que deseas eliminar el cliente "{{ cliente.persona.razon_social }}"?
+                {% else %}
+                ¿Estás seguro de que deseas restaurar el cliente "{{ cliente.persona.razon_social }}"?
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('clientes.delete_cliente', cliente_id=cliente.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn {% if cliente.persona.estado %}btn-danger{% else %}btn-success{% endif %}">
+                        {% if cliente.persona.estado %}
+                        Eliminar
+                        {% else %}
+                        Restaurar
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
+</div>
+{% endfor %}
+    </div>
+
     {% endblock %}
         {% block right_panel %}
         {% endblock %}
+           
 
           {% block scripts %}
 

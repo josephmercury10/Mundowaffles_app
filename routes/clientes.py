@@ -53,3 +53,49 @@ def create_cliente():
             flash("Por favor corrige los errores en el formulario.", "danger")
 
     return render_template("clientes/agregar_cliente.html", form=form)
+
+
+@clientes_bp.route("/update/<int:cliente_id>", methods=["GET", "POST"])
+def update_cliente(cliente_id):
+    cliente = Cliente.query.get_or_404(cliente_id)
+    persona = Persona.query.get_or_404(cliente.persona_id)
+    form = ClienteForm(obj=persona)
+
+    form.documento_id.choices = [(doc.id, doc.tipo_documento) for doc in Documento.query.all()]
+    
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            try:
+                persona.razon_social = form.razon_social.data
+                persona.direccion = form.direccion.data
+                persona.tipo_persona = form.tipo_persona.data
+                persona.documento_id = form.documento_id.data
+                persona.numero_documento = form.numero_documento.data
+
+                db.session.commit()
+                flash("Cliente actualizado exitosamente", "success")
+                return redirect(url_for("clientes.get_clientes"))
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Error al actualizar el cliente: {str(e)}", "danger")
+        else:
+            flash("Por favor corrige los errores en el formulario.", "danger")
+
+    return render_template("clientes/update_cliente.html", form=form, cliente=cliente)
+
+
+@clientes_bp.route("/delete/<int:cliente_id>", methods=["POST"])
+def delete_cliente(cliente_id):
+    cliente = Cliente.query.get_or_404(cliente_id)
+    try:
+        # Cambiar el estado
+        cliente.persona.estado = 0 if cliente.persona.estado else 1
+        db.session.commit()
+
+        mensaje = "Cliente restaurado" if cliente.persona.estado else "Cliente eliminado"
+        flash(mensaje, 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error al eliminar el cliente: {str(e)}", "danger")
+    return redirect(url_for("clientes.get_clientes"))
