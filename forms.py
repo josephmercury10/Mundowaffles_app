@@ -25,6 +25,15 @@ class PresentacionForm(FlaskForm):
     descripcion = TextAreaField('Descripción:', validators=[DataRequired()])
     submit = SubmitField('Guardar')
     
+class DeliveryForm(FlaskForm):
+    cliente = StringField('Cliente*:', validators=[DataRequired()])
+    telefono = StringField('Teléfono*:', validators=[Optional(), length(max=15)])
+    direccion = StringField('Dirección*:', validators=[DataRequired(), length(max=100)])
+    repartidor = SelectField('Repartidor:', choices=[('', 'Seleccione...') , ('Yari', 'Yari')], validators=[Optional()])
+    tiempo_estimado = SelectField('Tiempo Estimado:', choices=[('', 'Seleccione...'), ('30 minutos', '30 minutos'), ('45 minutos', '45 minutos'), ('1 hora', '1 hora')], validators=[Optional()])
+    comentarios = TextAreaField('Comentarios:', validators=[Optional(), length(max=200)])
+    submit = SubmitField('Crear')
+    
 class ProductoForm(FlaskForm):
     codigo = StringField('Código:', validators=[DataRequired(), length(min=1, max=50)])
     nombre = StringField('Nombre:', validators=[DataRequired(message="El nombre es obligatorio."), length(min=1, max=80)])

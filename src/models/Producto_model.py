@@ -23,6 +23,7 @@ class Producto(db.Model):
     nombre = db.Column(db.String(80), nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)
     descripcion = db.Column(db.String(255), nullable=True)
+    precio = db.Column(db.Numeric(10, 2), nullable=False, default=Decimal('0.00'))
     fecha_vencimiento = db.Column(db.Date, nullable=True)
     img_path = db.Column(db.String(255), nullable=True)
     estado = db.Column(db.SmallInteger, nullable=False, default=1)
