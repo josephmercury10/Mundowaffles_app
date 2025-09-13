@@ -1,6 +1,10 @@
 from flask import Blueprint, jsonify, render_template, request
+from datetime import datetime
 from forms import DeliveryForm
-from src.models import Producto_model
+from src.models.Producto_model import Producto
+from src.models.Venta_model import Venta, ProductoVenta
+from src.models.Cliente_model import Cliente
+from src.models.Persona_model import Persona
 from utils.db import db
 
 pruebas_bp = Blueprint('pruebas', __name__, url_prefix='/pruebas')
@@ -10,22 +14,93 @@ def prueba():
     form = DeliveryForm()
     return render_template('ventas/prueba.html', form=form)
 
+@pruebas_bp.route('/buscar_cliente_telefono', methods=['POST'])
+def buscar_cliente_telefono():
+    query = request.form.get('telefono', '').strip()
+    
+    if not query or len(query) < 3:
+        return ""
+    
+    # Buscar clientes que coincidan con la búsqueda por teléfono
+    clientes = db.session.query(Cliente).join(Persona).filter(
+        Persona.telefono.like(f'%{query}%')
+    ).limit(5).all()
+    
+    return render_template('ventas/_partials/clientes_resultados_telefono.html', 
+                           clientes=clientes, 
+                           query=query)
+    
+    
+
 @pruebas_bp.route('/save', methods=['POST'])
 def save():
     form = DeliveryForm()
     if form.validate_on_submit():
-        # Aquí puedes manejar la lógica para guardar los datos del formulario
-        productos = Producto_model.Producto.query.all()
-        return render_template('ventas/_partials/carrito.html', form=form, productos=productos)
+        try:
+            # Obtener datos del formulario
+            cliente_id = request.form.get('cliente_id')
+            es_nuevo_cliente = request.form.get('es_nuevo_cliente') == '1'
+            guardar_cliente = request.form.get('checkDefault') == 'on'
+            
+            # Si es nuevo cliente y se debe guardar
+            if es_nuevo_cliente and guardar_cliente:
+                # Crear nueva persona
+                persona = Persona(
+                    razon_social=form.cliente.data,
+                    direccion=form.direccion.data,
+                    telefono=form.telefono.data,
+                    tipo_persona="Persona natural",
+                    documento_id=1,  # Valor por defecto
+                    numero_documento="Sin documento"  # Valor por defecto
+                )
+                db.session.add(persona)
+                db.session.flush()  # Para obtener el ID
+                
+                # Crear nuevo cliente
+                cliente = Cliente(
+                    persona_id=persona.id
+                )
+                db.session.add(cliente)
+                db.session.flush()
+                
+                cliente_id = cliente.id
+            
+            # Almacenar el cliente_id en sesión para usarlo en guardar_pedido
+            from flask import session
+            if cliente_id:
+                session['cliente_id'] = cliente_id
+            
+            # Obtener productos para mostrar en la siguiente vista
+            productos = Producto.query.all()
+            
+            # Guardar datos del cliente para mostrar en el carrito
+            cliente_data = {
+                'id': cliente_id,
+                'nombre': form.cliente.data,
+                'telefono': form.telefono.data,
+                'direccion': form.direccion.data
+            }
+            
+            return render_template('ventas/_partials/carrito.html', 
+                                  form=form, 
+                                  productos=productos, 
+                                  cliente=cliente_data)
+        
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
+    
     return jsonify({'errors': form.errors}), 400
+
+
 
 @pruebas_bp.route('/agregar_producto', methods=['POST'])
 def agregar_producto():
     producto_id = request.form.get('id')
     nombre = request.form.get('nombre')
     precio = request.form.get('precio')
-
     #print(f"Producto ID: {producto_id}, Nombre: {nombre}, Precio: {precio}")
+    ventas = Venta.query.all()
 
     return render_template('ventas/_partials/producto_item.html',
                          producto={
@@ -33,3 +108,56 @@ def agregar_producto():
                              'nombre': nombre,
                              'precio': precio
                          })
+    
+    
+@pruebas_bp.route('/guardar_pedido', methods=['POST'])
+def guardar_pedido():
+    try:
+        from flask import session
+        data = request.get_json()
+        productos = data['productos']
+        
+        # Obtener el cliente_id de la sesión
+        cliente_id = session.get('cliente_id')
+        
+        # Crear la venta
+        venta = Venta(
+            fecha_hora=db.func.current_timestamp(),
+            impuesto=0.19,
+            numero_comprobante=f"V-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+            total=sum(float(p['precio']) * int(p['cantidad']) for p in productos),
+            estado=1,
+            cliente_id=cliente_id,  # Usar el cliente_id guardado
+            user_id=1,  # Ejemplo o desde sesión si tienes autenticación
+            tipoventa_id=2  # Venta delivery
+        )
+        db.session.add(venta)
+        db.session.flush()  # Para obtener el ID de la venta
+        
+        # Crear los productos de la venta
+        for producto in productos:
+            producto_venta = ProductoVenta(
+                venta_id=venta.id,
+                producto_id=producto['id'],
+                cantidad=producto['cantidad'],
+                precio_venta=producto['precio'],
+                descuento=0
+            )
+            db.session.add(producto_venta)
+        
+        db.session.commit()
+        
+        # Limpiar el cliente_id de la sesión
+        session.pop('cliente_id', None)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Pedido guardado exitosamente'
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })

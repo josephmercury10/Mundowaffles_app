@@ -1,9 +1,30 @@
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from decimal import Decimal
-import json
+from utils.db import db
+from src.models.Comprobante_model import Comprobante
 
-db = SQLAlchemy()
+class TipoVenta(db.Model):
+    __tablename__ = 'tipoventas'
+    
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    ventas = db.relationship("Venta")
+
+class ProductoVenta(db.Model):
+    __tablename__ = 'producto_venta'
+    
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    venta_id = db.Column(db.BigInteger, db.ForeignKey('ventas.id'), nullable=False)
+    producto_id = db.Column(db.BigInteger, db.ForeignKey('productos.id'), nullable=False)
+    cantidad = db.Column(db.Integer, nullable=False)
+    precio_venta = db.Column(db.Numeric(10, 2), nullable=False)
+    descuento = db.Column(db.Numeric(8, 2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    producto = db.relationship("Producto")
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
@@ -11,19 +32,22 @@ class Venta(db.Model):
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     fecha_hora = db.Column(db.DateTime, nullable=False)
     impuesto = db.Column(db.Numeric(8, 2), nullable=False)
-    numero_comprobante = db.Column(db.String(255), nullable=False)
+    numero_comprobante = db.Column(db.String(255), nullable=True)
     total = db.Column(db.Numeric(8, 2), nullable=False)
     estado = db.Column(db.SmallInteger, nullable=False, default=1)
     cliente_id = db.Column(db.BigInteger, db.ForeignKey('clientes.id'), nullable=True)
     user_id = db.Column(db.BigInteger, db.ForeignKey('users.id'), nullable=True)
     comprobante_id = db.Column(db.BigInteger, db.ForeignKey('comprobantes.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     tipoventa_id = db.Column(db.BigInteger, db.ForeignKey('tipoventas.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relaciones
-    productos = db.relationship('ProductoVenta', backref='venta', lazy=True, cascade='all, delete-orphan')
+    # Relacion muchos a muchos con Productos a través de ProductoVenta
+    productos = db.relationship("ProductoVenta")
     
+    comprobante = db.relationship("Comprobante", backref="ventas")
+
+
     def to_dict(self):
         return {
             'id': self.id,

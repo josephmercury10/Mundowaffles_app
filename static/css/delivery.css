@@ -10,7 +10,7 @@
 }
 
 .right-panel {
-  width: 400px;
+  width: 500px;
   background: white;
   border-left: 1px solid #e0e0e0;
 }
@@ -147,7 +147,7 @@
 .new-order-panel {
   background: #ff6b35;
   color: white;
-  padding: 16px 0;
+  padding: 10px 10px 0;
 }
 
 .new-order-header {

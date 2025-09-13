@@ -1,14 +1,16 @@
 <div class="products-header">
-
     <div class="order-summary">
-        <span>Cliente: <strong id="client-name">{{ form.cliente.data }}</strong></span><br>
-        <span>Teléfono: <strong id="client-phone">{{ form.telefono.data }}</strong></span>
+        <input type="hidden" id="cliente-id" value="{{ cliente.id if cliente else '' }}">
+        <span>ID: <strong id="client-id">{{ cliente.id if cliente else '' }}</strong></span><br>
+        <span>Cliente: <strong id="client-name">{{ cliente.nombre if cliente else form.cliente.data }}</strong></span><br>
+        <span>Teléfono: <strong id="client-phone">{{ cliente.telefono if cliente else form.telefono.data }}</strong></span><br>
+        <span>Dirección: <strong id="client-address">{{ cliente.direccion if cliente else form.direccion.data }}</strong></span>
     </div>
 </div>
 <div class="container text-center">
     <div class="row">
         <div class="col">
-            <h2>Agregar Productos</h2>
+            <h2>agregar</h2>
         </div>
     </div>
 </div>
@@ -36,8 +38,7 @@
     </div>
 
     <div class="action-buttons">
-        <button class="back-btn">Volver</button>
-        <button class="payment-btn">Proceder al Pago</button>
+        <button class="btn btn-warning">Enviado</button>
     </div>
 </div>
 

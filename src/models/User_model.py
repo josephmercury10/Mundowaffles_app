@@ -1,9 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from decimal import Decimal
-import json
-
-db = SQLAlchemy()
+from utils.db import db
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -14,9 +10,9 @@ class User(db.Model):
     email_verified_at = db.Column(db.DateTime, nullable=True)
     password = db.Column(db.String(255), nullable=False)
     remember_token = db.Column(db.String(100), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
     # Relaciones
     ventas = db.relationship('Venta', backref='user', lazy=True)
     

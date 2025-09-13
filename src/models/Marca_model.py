@@ -1,8 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
 from utils.db import db
 from datetime import datetime
-from decimal import Decimal
-import json
 
 class Marca(db.Model):
     __tablename__ = 'marcas'

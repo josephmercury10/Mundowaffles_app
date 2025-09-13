@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 
 <body>
-      {% block styles %}
-      <link rel="stylesheet" href="{{ url_for('static', filename='css/delivery.css') }}">
-      {% endblock %}
+    {% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/delivery.css') }}">
+    <style>
+            .dropdown-menu.show {
+                display: block;
+            }
+    </style>
+    {% endblock %}
     <div class="main-container">
         {% block left_panel %}            
             <div class="nav-tabs">
@@ -91,6 +96,32 @@
             <form id="cliente-form" hx-post="/pruebas/save" hx-swap="innerHTML">
                     {{ form.csrf_token }}
                     <div class="row g-3">
+                        <!-----------------------Teléfono-------------------------------------------->
+                        <div class="col-md-6 mb-2">
+                            {{ form.telefono.label(class="form-label") }}
+                            {{ form.telefono(
+                                class="form-control",
+                                id="telefono",
+                                **{
+                                    'hx-post': '/pruebas/buscar_cliente_telefono',
+                                    'hx-trigger': 'keyup changed delay:300ms',
+                                    'hx-target': '#resultados-clientes',
+                                    'hx-indicator': '#indicador-busqueda'
+                                }
+                            ) }}
+
+                            <div id="resultados-clientes" class="dropdown-menu" style="width:100%;"></div>
+                                <div id="indicador-busqueda" class="htmx-indicator spinner-border spinner-border-sm text-primary"
+                                    style="display:none; position:absolute; right:25px; top:38px;">
+                                    <span class="visually-hidden">Buscando...</span>
+                                </div>
+                            <input type="hidden" name="cliente_id" id="cliente_id">
+                            <input type="hidden" name="es_nuevo_cliente" id="es_nuevo_cliente" value="0">
+                            {% for error in form.telefono.errors %}
+                            <span style="color: red;">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
                         <!-----------------------Cliente-------------------------------------------->
                         <div class="col-md-6 mb-2" >
                             {{ form.cliente.label(class="form-label") }}
@@ -99,14 +130,7 @@
                             <span style="color: red;">{{ error }}</span>
                             {% endfor %}
                         </div>
-                        <!-----------------------Teléfono-------------------------------------------->
-                        <div class="col-md-6 mb-2">
-                            {{ form.telefono.label(class="form-label") }}
-                            {{ form.telefono(class="form-control", rows="3") }}
-                            {% for error in form.telefono.errors %}
-                            <span style="color: red;">{{ error }}</span>
-                            {% endfor %}
-                        </div>
+
                         <!-----------------------Dirección-------------------------------------------->
                         <div class="col-12 mb-2">
                             {{ form.direccion.label(class="form-label") }}
@@ -115,16 +139,19 @@
                             <span style="color: red;">{{ error }}</span>
                             {% endfor %}
                         </div>
+
                         <!-----------------------Repartidor-------------------------------------------->
                         <div class="col-md-6 mb-2">
                             {{ form.repartidor.label(class="form-label") }}
                             {{ form.repartidor(class="form-control") }}
                         </div>
+
                         <!-----------------------Tiempo estimado-------------------------------------------->
                         <div class="col-md-6 mb-2">
                             {{ form.tiempo_estimado.label(class="form-label") }}
                             {{ form.tiempo_estimado(class="form-control") }}
                         </div>
+
                         <!-----------------------Comentarios-------------------------------------------->
                         <div class="col-12 mb-2">
                             {{ form.comentarios.label(class="form-label") }}
@@ -133,21 +160,27 @@
                             <span style="color: red;">{{ error }}</span>
                             {% endfor %}
                         </div>
+                        
                         <!-----------------------Botón Crear-------------------------------------------->
-                        <div class="col-12 mt-3">
-                            {{ form.submit(class="btn btn-primary") }}
-                    </div>
+                        <div class="form-check col-md-6 mt-3">
+                                <input class="form-check-input" type="checkbox" value="" id="checkDefault">
+                                <label class="form-check-label" for="checkDefault">
+                                    Guardar Cliente
+                                </label>
+                        </div>
+                        
+                        <div class="col-md-6 mt-3 text-end">
+                            {{ form.submit(class="btn btn-primary text-end") }}    
+                        </div>
+
+                        
             </form>
         </div>     
 
             <!-- Paso 2: Panel de productos -->
         <div class="step-panel" id="products-panel" style="display: none;">
             <div class="products-header">
-                <h2>Agregar Productos</h2>
-                <div class="order-summary">
-                    <span>Cliente: <strong id="client-name"></strong></span>
-                    <span>Teléfono: <strong id="client-phone"></strong></span>
-                </div>
+                
             </div>
             
             <div class="products-grid">
@@ -161,21 +194,15 @@
             </div>
 
             <div class="order-items">
-                <h3>Productos Seleccionados</h3>
                 <div class="selected-products">
                     <!-- Lista de productos seleccionados -->
                 </div>
                 
                 <div class="order-total">
-                    <div>Subtotal: $<span id="subtotal">0</span></div>
-                    <div>Envío: $<span id="shipping">0</span></div>
-                    <div>Total: $<span id="total">0</span></div>
+
                 </div>
                 
-                <div class="action-buttons">
-                    <button class="back-btn">Volver</button>
-                    <button class="payment-btn">Proceder al Pago</button>
-                </div>
+                
             </div>
         </div>
         {% endblock %}
