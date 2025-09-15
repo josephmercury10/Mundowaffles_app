@@ -57,6 +57,11 @@
   font-weight: 600;
 }
 
+.nuevo-pedido-btn {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
 .section-count {
   background: #666;
   color: white;

@@ -12,9 +12,6 @@ class User(db.Model):
     remember_token = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-
-    # Relaciones
-    ventas = db.relationship('Venta', backref='user', lazy=True)
     
     def to_dict(self):
         return {

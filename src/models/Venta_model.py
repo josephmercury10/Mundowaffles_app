@@ -1,6 +1,7 @@
 from datetime import datetime
 from utils.db import db
 from src.models.Comprobante_model import Comprobante
+from src.models.User_model import User
 
 class TipoVenta(db.Model):
     __tablename__ = 'tipoventas'
@@ -41,11 +42,14 @@ class Venta(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     tipoventa_id = db.Column(db.BigInteger, db.ForeignKey('tipoventas.id'), nullable=True)
+    estado_delivery = db.Column(db.SmallInteger, nullable=False, default=1)  # 1: pendiente, 2: enviado, 3: entregado
     
     # Relacion muchos a muchos con Productos a través de ProductoVenta
     productos = db.relationship("ProductoVenta")
     
     comprobante = db.relationship("Comprobante", backref="ventas")
+    user = db.relationship("User", backref="ventas")
+    cliente = db.relationship("Cliente", backref="ventas")
 
 
     def to_dict(self):

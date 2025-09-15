@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, session
 from datetime import datetime
 from forms import DeliveryForm
 from src.models.Producto_model import Producto
@@ -13,6 +13,11 @@ pruebas_bp = Blueprint('pruebas', __name__, url_prefix='/pruebas')
 def prueba():
     form = DeliveryForm()
     return render_template('ventas/prueba.html', form=form)
+
+@pruebas_bp.route('/nuevo_pedido', methods=['GET'])
+def nuevo_pedido():
+    form = DeliveryForm()
+    return render_template('ventas/_partials/nuevo_pedido.html', form=form)
 
 @pruebas_bp.route('/buscar_cliente_telefono', methods=['POST'])
 def buscar_cliente_telefono():
@@ -66,7 +71,6 @@ def save():
                 cliente_id = cliente.id
             
             # Almacenar el cliente_id en sesión para usarlo en guardar_pedido
-            from flask import session
             if cliente_id:
                 session['cliente_id'] = cliente_id
             
@@ -113,7 +117,6 @@ def agregar_producto():
 @pruebas_bp.route('/guardar_pedido', methods=['POST'])
 def guardar_pedido():
     try:
-        from flask import session
         data = request.get_json()
         productos = data['productos']
         
@@ -161,3 +164,18 @@ def guardar_pedido():
             'success': False,
             'message': str(e)
         })
+        
+
+@pruebas_bp.route('/ventas_estado/<estado>', methods=['GET'])
+def ventas_estado(estado):
+    try:
+        # Convertir el estado a un entero
+        estado = int(estado)
+
+        # Filtrar las ventas según el estado
+        ventas = Venta.query.filter_by(estado_delivery=estado).all()
+
+        # Renderizar un fragmento de HTML con las ventas
+        return render_template('ventas/_partials/ventas_table.html', ventas=ventas)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
