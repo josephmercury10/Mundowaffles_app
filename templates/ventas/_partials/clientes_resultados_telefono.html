@@ -45,16 +45,19 @@ function crearNuevoClientePorTelefono(telefono) {
 document.addEventListener('click', function(e) {
     const resultados = document.getElementById('resultados-clientes');
     const input = document.getElementById('telefono');
-    
-    if (!resultados.contains(e.target) && e.target !== input) {
+
+    if (resultados && !resultados.contains(e.target) && e.target !== input) {
         resultados.classList.remove('show');
     }
 });
 
+
 // Mostrar el dropdown cuando aparecen resultados
 document.addEventListener('htmx:afterSettle', function() {
-    if (document.getElementById('resultados-clientes').innerHTML.trim() !== '') {
-        document.getElementById('resultados-clientes').classList.add('show');
+    const resultados = document.getElementById('resultados-clientes');
+    if (resultados && resultados.innerHTML.trim() !== '') {
+        resultados.classList.add('show');
     }
 });
+
 </script>

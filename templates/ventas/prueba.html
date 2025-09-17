@@ -19,7 +19,7 @@
                     <button class="btn btn-success" 
                             hx-get="/pruebas/nuevo_pedido" 
                             hx-target="#right_panel" 
-                            hx-swap="outerHTML">
+                            hx-swap="innerHTML">
                         Nuevo Pedido
                     </button>
                 </div>
@@ -29,7 +29,7 @@
             <!-- Tabla de Pendientes -->
             <div class="delivery-section">
                 <div class="section-header pendientes">
-                    <h3>Pendientes</h3>
+                    <h3>En Preparación</h3>
                 </div>
                 <table id="pendientes-table" class="table table-hover" 
                        hx-get="/pruebas/ventas_estado/1" 
@@ -39,10 +39,14 @@
                     <thead class="table-danger">
                         <tr>
                             <th>ID</th>
-                            <th>Recibido</th>
-                            <th>Estado</th>
+                            <th>Hora inicio</th>
+                            <th>Dirección</th>
+                            <th>Telefono</th>
                             <th>Cliente</th>
+                            <th>Repartidor</th>
+                            <th>Tiempo</th>
                             <th>Total</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="pendientes-table-body">

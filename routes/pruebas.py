@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, render_template, request, session
-from datetime import datetime
+from flask import Blueprint, jsonify, render_template, request, session, json
+from datetime import datetime, timedelta
+from sqlalchemy.orm import joinedload
 from forms import DeliveryForm
 from src.models.Producto_model import Producto
 from src.models.Venta_model import Venta, ProductoVenta
@@ -36,6 +37,81 @@ def buscar_cliente_telefono():
                            query=query)
     
     
+
+# Vista para mostrar el detalle del pedido editable
+@pruebas_bp.route('/detalle_pedido/<int:venta_id>', methods=['GET'])
+def detalle_pedido(venta_id):
+    try: 
+        # Obtener la venta con sus relaciones
+        venta = (Venta.query
+                 .options(
+                     joinedload(Venta.productos).joinedload(ProductoVenta.producto),
+                     joinedload(Venta.cliente)
+                 )
+                 .get(venta_id))
+        
+        if not venta:
+            return jsonify({'error': 'Pedido no encontrado'}), 404
+
+        # Obtener todos los productos disponibles para agregar
+        productos_disponibles = Producto.query.filter_by(estado=1).all()
+
+        # Normalizar datos del cliente
+        cliente_data = {
+            'id': venta.cliente_id or '',
+            'nombre': '',
+            'telefono': '',
+            'direccion': ''
+        }
+        
+        if venta.cliente:
+            # Intentar obtener datos del cliente desde diferentes fuentes
+            persona = getattr(venta.cliente, 'persona', None)
+            if persona:
+                cliente_data.update({
+                    'nombre': (getattr(persona, 'nombres', None) or 
+                              getattr(persona, 'razon_social', None) or 
+                              'Sin nombre'),
+                    'telefono': getattr(persona, 'telefono', ''),
+                    'direccion': getattr(persona, 'direccion', '')
+                })
+            else:
+                cliente_data.update({
+                    'nombre': getattr(venta.cliente, 'nombre', 'Sin nombre'),
+                    'telefono': getattr(venta.cliente, 'telefono', ''),
+                    'direccion': getattr(venta.cliente, 'direccion', '')
+                })
+
+        # Convertir los items a formato JSON para JavaScript
+        items_json = []
+        for pv in venta.productos:
+            prod = getattr(pv, 'producto', None)
+            items_json.append({
+                'id': str(pv.producto_id),  # Convertir a string para usar como clave
+                'nombre': getattr(prod, 'nombre', 'Producto'),
+                'precio': float(pv.precio_venta),
+                'cantidad': int(pv.cantidad),
+                'subtotal': float(pv.precio_venta) * int(pv.cantidad)
+            })
+
+        # Calcular totales
+        subtotal = sum(item['subtotal'] for item in items_json)
+        envio = 1000  # Costo fijo de envío
+        total = subtotal + envio
+
+        return render_template(
+            'ventas/_partials/detalle_pedido_editable.html',
+            venta=venta,
+            cliente=cliente_data,
+            items=items_json, 
+            productos_disponibles=productos_disponibles,
+            subtotal=subtotal,
+            envio=envio,
+            total=total
+        )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @pruebas_bp.route('/save', methods=['POST'])
 def save():
@@ -179,3 +255,35 @@ def ventas_estado(estado):
         return render_template('ventas/_partials/ventas_table.html', ventas=ventas)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+
+# Filtro personalizado para formatear fechas como "hace X tiempo"
+@pruebas_bp.app_template_filter('timeago')
+def timeago_filter(date):
+    if not date:
+        return "Sin fecha"
+    
+    now = datetime.now()
+    diff = now - date
+    
+    # Obtener total de segundos
+    seconds = int(diff.total_seconds())
+    
+    # Convertir a formato legible
+    if seconds < 60:
+        return f"{seconds} seg"
+    elif seconds < 3600:
+        minutes = seconds // 60
+        return f"{minutes} min"
+    elif seconds < 86400:
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        return f"{hours}h {minutes}min"
+    elif seconds < 604800:  # 7 días
+        days = seconds // 86400
+        hours = (seconds % 86400) // 3600
+        return f"{days}d {hours}h"
+    else:
+        # Para periodos más largos, mostrar la fecha completa
+        return date.strftime("%d/%m/%Y")
