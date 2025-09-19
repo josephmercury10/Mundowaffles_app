@@ -32,7 +32,7 @@ class DeliveryForm(FlaskForm):
     repartidor = SelectField('Repartidor:', choices=[('', 'Seleccione...') , ('Yari', 'Yari')], validators=[Optional()])
     tiempo_estimado = SelectField('Tiempo Estimado:', choices=[('', 'Seleccione...'), ('30 minutos', '30 minutos'), ('45 minutos', '45 minutos'), ('1 hora', '1 hora')], validators=[Optional()])
     comentarios = TextAreaField('Comentarios:', validators=[Optional(), length(max=200)])
-    costo_envio = StringField('Costo de Envío*:', validators=[Optional(), length(max=10)])
+    costo_envio = SelectField('Costo de Envío:', choices=[('1500', '$1.500'), ('2000', '$2.000'), ('2500', '$2.500')], validators=[DataRequired()])
     submit = SubmitField('Crear')
     
 class ProductoForm(FlaskForm):

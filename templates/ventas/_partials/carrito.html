@@ -1,6 +1,10 @@
 <div class="products-header">
     <div class="order-summary">
         <input type="hidden" id="cliente-id" value="{{ cliente.id if cliente else '' }}">
+        <input type="hidden" id="costo-envio" value="{{ costo_envio }}">
+        <input type="hidden" id="tiempo-estimado" value="{{ tiempo_estimado }}">
+        <input type="hidden" id="comentarios" value="{{ comentarios }}">
+        <input type="hidden" id="repartidor" value="{{ repartidor }}">
         <span>ID: <strong id="client-id">{{ cliente.id if cliente else '' }}</strong></span><br>
         <span>Cliente: <strong id="client-name">{{ cliente.nombre if cliente else form.cliente.data }}</strong></span><br>
         <span>Teléfono: <strong id="client-phone">{{ cliente.telefono if cliente else form.telefono.data }}</strong></span><br>

@@ -158,7 +158,11 @@ def save():
                 'id': cliente_id,
                 'nombre': form.cliente.data,
                 'telefono': form.telefono.data,
-                'direccion': form.direccion.data
+                'direccion': form.direccion.data,
+                'costo_envio': form.costo_envio.data,
+                'tiempo_estimado': form.tiempo_estimado.data,
+                'comentarios': form.comentarios.data,
+                'repartidor': form.repartidor.data
             }
             
             return render_template('ventas/_partials/carrito.html', 

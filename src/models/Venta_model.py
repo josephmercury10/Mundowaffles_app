@@ -42,7 +42,8 @@ class Venta(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     tipoventa_id = db.Column(db.BigInteger, db.ForeignKey('tipoventas.id'), nullable=True)
-    estado_delivery = db.Column(db.SmallInteger, nullable=False, default=1)  # 1: pendiente, 2: enviado, 3: entregado
+    estado_delivery = db.Column(db.SmallInteger, nullable=False, default=1)  # 1: en preparacion, 2: enviado, 3: entregado
+    costo_envio = db.Column(db.Numeric(10, 0), nullable=True, default=0)
     
     # Relacion muchos a muchos con Productos a través de ProductoVenta
     productos = db.relationship("ProductoVenta")
