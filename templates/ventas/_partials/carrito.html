@@ -18,6 +18,7 @@
         </div>
     </div>
 </div>
+<!-- Lista de productos disponibles -->
 {% for producto in productos %}
 <button type="button"
         class="btn btn-secondary m-1"
@@ -32,7 +33,6 @@
     </div>
 
     <div id="acciones" style="margin-top:20px;">
-
     </div>
 
     <div class="order-total">
@@ -93,8 +93,8 @@
         });
         
         // Envío fijo por ahora
-        const envio = Object.keys(window.carritoItems).length > 0 ? 1000 : 0;
-        
+        const envio = Object.keys(window.carritoItems).length > 0 ? document.getElementById('costo-envio').value : 0;
+
         // Total
         const total = subtotal + envio;
         

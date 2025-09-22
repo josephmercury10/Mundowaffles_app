@@ -44,6 +44,9 @@ class Venta(db.Model):
     tipoventa_id = db.Column(db.BigInteger, db.ForeignKey('tipoventas.id'), nullable=True)
     estado_delivery = db.Column(db.SmallInteger, nullable=False, default=1)  # 1: en preparacion, 2: enviado, 3: entregado
     costo_envio = db.Column(db.Numeric(10, 0), nullable=True, default=0)
+    repartidor_id = db.Column(db.Integer, db.ForeignKey('repartidores.id'), nullable=True)
+    comentarios = db.Column(db.String(50), nullable=True)
+    tiempo_estimado = db.Column(db.String(15), nullable=True)
     
     # Relacion muchos a muchos con Productos a través de ProductoVenta
     productos = db.relationship("ProductoVenta")
