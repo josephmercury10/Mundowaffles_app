@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, SubmitField, DateField, FileField, SelectMultipleField
 from wtforms.validators import DataRequired, Optional, length, ValidationError
 from flask_wtf.file import FileAllowed
+from src.models.repartidores_model import Repartidor
 import re
 
 
@@ -27,9 +28,9 @@ class PresentacionForm(FlaskForm):
     
 class DeliveryForm(FlaskForm):
     cliente = StringField('Cliente*:', validators=[DataRequired()])
-    telefono = StringField('Teléfono*:', validators=[Optional(), length(max=15)])
+    telefono = StringField('Teléfono*:', validators=[DataRequired(), length(max=15)])
     direccion = StringField('Dirección*:', validators=[DataRequired(), length(max=100)])
-    repartidor = SelectField('Repartidor:', choices=[('', 'Seleccione...') , ('Yari', 'Yari')], validators=[Optional()])
+    repartidor = SelectField('Repartidor:', choices=[], validators=[Optional()])
     tiempo_estimado = SelectField('Tiempo Estimado:', choices=[('', 'Seleccione...'), ('30 minutos', '30 minutos'), ('45 minutos', '45 minutos'), ('1 hora', '1 hora')], validators=[Optional()])
     comentarios = TextAreaField('Comentarios:', validators=[Optional(), length(max=200)])
     costo_envio = SelectField('Costo de Envío:', choices=[('1500', '$1.500'), ('2000', '$2.000'), ('2500', '$2.500')], validators=[DataRequired()])

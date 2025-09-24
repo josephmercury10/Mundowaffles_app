@@ -1,5 +1,5 @@
 class DevelopmentConfig():
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:@localhost/dbmundo'
+    SQLALCHEMY_DATABASE_URI = 'mysql://root:@localhost:3309/dbmundo'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DEBUG = True
     MYSQL_HOST = 'localhost'

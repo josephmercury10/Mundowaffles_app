@@ -14,6 +14,7 @@ from routes.pos import pos_bp
 from routes.clientes import clientes_bp
 from routes.ventas import ventas_bp
 from routes.pruebas import pruebas_bp
+from routes.delivery import delivery_bp
 
 
 app = Flask(__name__)
@@ -36,6 +37,7 @@ app.register_blueprint(pos_bp)
 app.register_blueprint(clientes_bp)
 app.register_blueprint(ventas_bp)
 app.register_blueprint(pruebas_bp)
+app.register_blueprint(delivery_bp)
 
 #def pagina_no_encontrada(error):
  #   return "<h1>Página no encontrada</h1><p>Lo sentimos, la página que buscas no existe.</p>"

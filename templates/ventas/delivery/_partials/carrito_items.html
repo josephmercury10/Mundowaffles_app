@@ -1,0 +1,60 @@
+<!-- ventas/_partials/carrito_items.html -->
+<div class="carrito-items">
+    {% for item in carrito_items %}
+    <div class="item-carrito border-bottom p-2" id="item-{{ item.id }}">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ item.nombre }}</strong>
+                <div class="text-muted">Precio: ${{ item.precio }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Disminuir cantidad -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        hx-post="/delivery/actualizar_cantidad"
+                        hx-vals='{"item_id": "{{ item.id }}", "accion": "disminuir"}'
+                        hx-target="#carrito-container"
+                        hx-swap="innerHTML">-</button>
+                
+                <span class="mx-2">{{ item.cantidad }}</span>
+                
+                <!-- Aumentar cantidad -->
+                <button class="btn btn-sm btn-outline-secondary"
+                        hx-post="/delivery/actualizar_cantidad"
+                        hx-vals='{"item_id": "{{ item.id }}", "accion": "aumentar"}'
+                        hx-target="#carrito-container"
+                        hx-swap="innerHTML">+</button>
+                
+                <span class="fw-bold">${{ item.subtotal }}</span>
+                
+                <!-- Eliminar item -->
+                <button class="btn btn-sm btn-danger"
+                        hx-delete="/delivery/eliminar_del_carrito/{{ item.id }}"
+                        hx-target="#carrito-container"
+                        hx-swap="innerHTML"
+                        hx-confirm="¿Eliminar producto?">×</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Totales -->
+<div class="order-total mt-3">
+    <div>Subtotal: ${{ subtotal }}</div>
+    <div>Envío: ${{ envio }}</div>
+    <div class="fw-bold">Total: ${{ total }}</div>
+</div>
+
+<!-- Botón guardar (solo si hay items) -->
+{% if carrito_items %}
+<div class="action-buttons mt-3">
+    <button class="btn btn-success"
+            hx-post="/delivery/finalizar_pedido"
+            hx-include="#datos-pedido"
+            hx-target="#right_panel"
+            hx-swap="innerHTML"
+            hx-confirm="¿Confirmar pedido?">
+        Guardar Pedido
+    </button>
+</div>
+{% endif %}
