@@ -36,12 +36,10 @@ def save():
             
             # Obtener datos del formulario
             cliente_id = request.form.get('cliente_id')
-            es_nuevo_cliente = request.form.get('es_nuevo_cliente') == '1'
-            guardar_cliente = request.form.get('checkDefault') == 'on'
             envio = int(form.costo_envio.data.strip())
             
             # Si es nuevo cliente y se debe guardar
-            if es_nuevo_cliente and guardar_cliente:
+            if cliente_id == '':
                 # Crear nueva persona
                 persona = Persona(
                     razon_social=form.cliente.data,
@@ -60,6 +58,8 @@ def save():
                 )
                 db.session.add(cliente)
                 db.session.flush()
+                
+                db.session.commit()
                 
                 cliente_id = cliente.id
             

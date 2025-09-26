@@ -14,6 +14,36 @@ class CategoriaProducto(db.Model):
     # Relaciones directas
     producto = db.relationship("Producto", back_populates="categorias")
     categoria = db.relationship("Categoria", back_populates="productos")
+    
+    
+    class ProductoAtributo(db.Model):
+        __tablename__ = 'producto_atributo'
+        
+        id = db.Column(db.BigInteger, primary_key=True)
+        producto_id = db.Column(db.BigInteger, db.ForeignKey('productos.id'), nullable=False)
+        atributo_id = db.Column(db.BigInteger, db.ForeignKey('atributos_producto.id'), nullable=False)
+        es_visible = db.Column(db.Boolean, default=True)
+        orden_producto = db.Column(db.Integer, default=0)
+        created_at = db.Column(db.TIMESTAMP, default=datetime.now)
+        updated_at = db.Column(db.TIMESTAMP, default=datetime.now, onupdate=datetime.now)
+
+        # Restricción única
+        __table_args__ = (
+            db.UniqueConstraint('producto_id', 'atributo_id', name='producto_atributo_unique'),
+        )
+        
+        def __repr__(self):
+            return f'<ProductoAtributo Producto:{self.producto_id} - Atributo:{self.atributo_id}>'
+        
+        def to_dict(self):
+            return {
+                'id': self.id,
+                'producto_id': self.producto_id,
+                'atributo_id': self.atributo_id,
+                'es_visible': self.es_visible,
+                'orden_producto': self.orden_producto
+            }
+
 
 class Producto(db.Model):
     __tablename__ = 'productos'

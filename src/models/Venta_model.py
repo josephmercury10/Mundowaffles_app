@@ -24,8 +24,37 @@ class ProductoVenta(db.Model):
     descuento = db.Column(db.Numeric(8, 2), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    # NUEVO CAMPO JSON
+    atributos_seleccionados = db.Column(db.JSON, nullable=True)
     
     producto = db.relationship("Producto")
+    
+    def __repr__(self):
+        return f'<ProductoVenta Venta:{self.venta_id} - Producto:{self.producto_id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'venta_id': self.venta_id,
+            'producto_id': self.producto_id,
+            'cantidad': self.cantidad,
+            'precio_venta': float(self.precio_venta),
+            'descuento': float(self.descuento),
+            'atributos_seleccionados': self.atributos_seleccionados
+        }
+    
+    def calcular_precio_extras(self):
+        """
+        Calcula el total de extras desde el JSON
+        """
+        if not self.atributos_seleccionados:
+            return 0.00
+            
+        total_extras = 0.00
+        for atributo in self.atributos_seleccionados:
+            for valor in atributo.get('valores', []):
+                total_extras += float(valor.get('precio', 0))
+        return total_extras
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
