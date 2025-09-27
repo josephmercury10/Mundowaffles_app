@@ -269,3 +269,39 @@ def buscar_cliente_telefono():
     return render_template('ventas/delivery/_partials/clientes_resultados_telefono.html', 
                            clientes=clientes, 
                            query=query)
+    
+    
+# Seccion que se encarga de mostrar y actualizar datos de los pedidos
+
+@delivery_bp.route('/detalle_pedido/<int:pedido_id>', methods=['GET'])
+def detalle_pedido(pedido_id):
+    try:
+        # Obtener el pedido y sus productos
+        pedido = Venta.query.get(pedido_id)
+        if not pedido:
+            return jsonify({'error': 'Pedido no encontrado'}), 404
+
+        productos = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        cliente = Cliente.query.get(pedido.cliente_id)
+
+        return render_template('ventas/delivery/_partials/detalle_pedido.html',
+                               pedido=pedido,
+                               productos=productos,
+                               cliente=cliente)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@delivery_bp.route('/pedidos_estado/<estado>', methods=['GET'])
+def ventas_estado(estado):
+    try:
+        # Convertir el estado a un entero
+        estado = int(estado)
+
+        # Filtrar las ventas según el estado
+        ventas = Venta.query.filter_by(estado_delivery=estado).all()
+
+        # Renderizar un fragmento de HTML con las ventas
+        return render_template('ventas/delivery/_partials/pedidos.html', ventas=ventas)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

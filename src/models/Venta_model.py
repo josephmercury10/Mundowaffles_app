@@ -11,7 +11,7 @@ class TipoVenta(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
-    ventas = db.relationship("Venta")
+
 
 class ProductoVenta(db.Model):
     __tablename__ = 'producto_venta'
@@ -83,6 +83,8 @@ class Venta(db.Model):
     comprobante = db.relationship("Comprobante", backref="ventas")
     user = db.relationship("User", backref="ventas")
     cliente = db.relationship("Cliente", backref="ventas")
+    tipoVenta = db.relationship("TipoVenta", backref="ventas")
+    repartidor = db.relationship("Repartidor", backref="ventas")
 
 
     def to_dict(self):

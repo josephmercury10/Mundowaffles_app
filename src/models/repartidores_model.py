@@ -9,6 +9,5 @@ class Repartidor(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     id_persona = db.Column(db.BigInteger, db.ForeignKey('personas.id'), nullable=False)
     
-    ventas = db.relationship("Venta", backref="repartidor")
     
     persona = db.relationship("Persona", backref="repartidor", uselist=False)

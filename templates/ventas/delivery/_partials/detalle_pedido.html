@@ -1,0 +1,60 @@
+<div id="right_panel">
+    <div class="new-order-panel">
+        <div class="new-order-header">PEDIDO #{{ pedido.id }}</div>
+    </div>
+
+        <!-- Información del pedido -->
+    <div class="container text-start">
+        <div class="row">
+            <div class="col">
+                <p>Recibido:</p>
+            </div>
+            <div class="col">
+                <p><strong>{{ pedido.fecha_hora }}</strong></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p>Tipo:</p>
+            </div>
+            <div class="col">
+                <p><strong>{{ pedido.tipoVenta.nombre }}</strong></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p>Cliente:</p>
+            </div>
+            <div class="col">
+                <p><strong>{{ cliente.persona.razon_social }}</strong></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p>Teléfono:</p>
+            </div>
+            <div class="col">
+                <p><strong>{{ cliente.persona.telefono }}</strong></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p>Dirección:</p>
+            </div>
+            <div class="col">
+                <p><strong>{{ cliente.persona.direccion }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container text-center">
+        <div class="row">
+            <div class="col">
+                <h1 class="display-6">Items del Pedido</h1>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
