@@ -1,0 +1,97 @@
+<div class="card-content space-y-3">
+    {% for producto in productos %}
+    <div class="order-item">
+        <div class="item-left">
+            <div class="quantity-badge">{{ producto.cantidad }}</div>
+            <div>
+                <p class="item-name">{{ producto.producto.nombre }}</p>
+                <p class="item-details">{{ producto.cantidad }} × ${{ producto.precio_venta }}</p>
+            </div>
+        </div>
+        <div class="item-actions">
+            <p class="item-price">${{ producto.cantidad * producto.precio_venta }}</p>
+            {% if pedido.estado_delivery == 1 %}
+            <div class="action-buttons">
+                <!-- Botón disminuir -->
+                <button class="btn-icon btn-minus"
+                        hx-post="/delivery/pedido/{{ pedido.id }}/producto/{{ producto.id }}/actualizar"
+                        hx-vals='{"accion": "disminuir"}'
+                        hx-target="#items-container"
+                        hx-swap="innerHTML"
+                        title="Disminuir cantidad">
+                    <svg class="icon-sm" viewBox="0 0 24 24">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <!-- Botón aumentar -->
+                <button class="btn-icon btn-plus"
+                        hx-post="/delivery/pedido/{{ pedido.id }}/producto/{{ producto.id }}/actualizar"
+                        hx-vals='{"accion": "aumentar"}'
+                        hx-target="#items-container"
+                        hx-swap="innerHTML"
+                        title="Aumentar cantidad">
+                    <svg class="icon-sm" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <!-- Botón eliminar -->
+                <button class="btn-icon btn-delete"
+                        hx-delete="/delivery/pedido/{{ pedido.id }}/producto/{{ producto.id }}/eliminar"
+                        hx-target="#items-container"
+                        hx-swap="innerHTML"
+                        hx-confirm="¿Eliminar este producto del pedido?"
+                        title="Eliminar producto">
+                    <svg class="icon-sm" viewBox="0 0 24 24">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-cart">
+        <p>No hay productos en este pedido</p>
+    </div>
+    {% endfor %}
+
+    <!-- Sección para agregar nuevos productos (solo si estado_delivery = 1) -->
+    {% if pedido.estado_delivery == 1 %}
+    <div class="add-product-section">
+        <details class="productos-acordeon">
+            <summary class="acordeon-header">
+                <svg class="icon text-primary" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span>Agregar más productos</span>
+                <svg class="icon-chevron" viewBox="0 0 24 24">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </summary>
+            <div class="productos-grid-container">
+                <!-- Los productos se cargan via HTMX al abrir -->
+                <div hx-get="/delivery/pedido/{{ pedido.id }}/productos_disponibles"
+                     hx-trigger="revealed"
+                     hx-swap="innerHTML">
+                    <div class="loading-productos">
+                        <div class="spinner"></div>
+                        <span>Cargando productos...</span>
+                    </div>
+                </div>
+            </div>
+        </details>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Resumen actualizado -->
+<div class="card-footer">
+    <div class="summary-row summary-total">
+        <span class="summary-label">Total:</span>
+        <span class="summary-value">${{ total_con_envio }}</span>
+    </div>
+</div>

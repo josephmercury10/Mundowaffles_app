@@ -1,0 +1,25 @@
+<div class="productos-grid">
+    {% for producto in productos %}
+    <div class="producto-card">
+        <div class="producto-card-body">
+            <h4 class="producto-card-nombre">{{ producto.nombre }}</h4>
+            <p class="producto-card-precio">${{ producto.precio }}</p>
+        </div>
+        <button class="btn-agregar-producto"
+                hx-post="/delivery/pedido/{{ pedido_id }}/agregar_producto"
+                hx-vals='{"producto_id": "{{ producto.id }}"}'
+                hx-target="#items-container"
+                hx-swap="innerHTML">
+            <svg class="icon-sm" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Agregar
+        </button>
+    </div>
+    {% else %}
+    <div class="no-productos">
+        <p>No hay productos disponibles</p>
+    </div>
+    {% endfor %}
+</div>

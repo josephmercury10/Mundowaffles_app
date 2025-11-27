@@ -335,3 +335,162 @@ def cambiar_estado(pedido_id, nuevo_estado):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+    
+    
+
+
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/producto/<int:producto_id>/actualizar', methods=['POST'])
+def actualizar_producto_pedido(pedido_id, producto_id):
+    """Actualiza la cantidad de un producto en un pedido en preparación"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido:
+            return jsonify({'error': 'Pedido no encontrado'}), 404
+        
+        # Solo permitir si está en preparación
+        if pedido.estado_delivery != 1:
+            return jsonify({'error': 'No se puede modificar un pedido enviado'}), 403
+        
+        producto_venta = ProductoVenta.query.get(producto_id)
+        if not producto_venta or producto_venta.venta_id != pedido_id:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+        
+        accion = request.form.get('accion')
+        
+        if accion == 'aumentar':
+            producto_venta.cantidad += 1
+        elif accion == 'disminuir':
+            producto_venta.cantidad -= 1
+            if producto_venta.cantidad <= 0:
+                db.session.delete(producto_venta)
+        
+        # Recalcular total del pedido
+        productos_restantes = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        pedido.total = sum(float(p.precio_venta) * p.cantidad for p in productos_restantes)
+        
+        db.session.commit()
+        
+        # Retornar el partial actualizado
+        return _render_items_pedido(pedido_id)
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/producto/<int:producto_id>/eliminar', methods=['DELETE'])
+def eliminar_producto_pedido(pedido_id, producto_id):
+    """Elimina un producto de un pedido en preparación"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido:
+            return jsonify({'error': 'Pedido no encontrado'}), 404
+        
+        if pedido.estado_delivery != 1:
+            return jsonify({'error': 'No se puede modificar un pedido enviado'}), 403
+        
+        producto_venta = ProductoVenta.query.get(producto_id)
+        if not producto_venta or producto_venta.venta_id != pedido_id:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+        
+        db.session.delete(producto_venta)
+        
+        # Recalcular total
+        productos_restantes = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        pedido.total = sum(float(p.precio_venta) * p.cantidad for p in productos_restantes)
+        
+        db.session.commit()
+        
+        return _render_items_pedido(pedido_id)
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+def _render_items_pedido(pedido_id):
+    """Función auxiliar para renderizar los items del pedido"""
+    pedido = Venta.query.get(pedido_id)
+    productos = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+    costo_envio = pedido.costo_envio if pedido.costo_envio else 0
+    total_con_envio = float(pedido.total) + float(costo_envio)
+    
+    return render_template('ventas/delivery/_partials/items_pedido.html',
+                          pedido=pedido,
+                          productos=productos,
+                          total_con_envio=total_con_envio)
+    
+    
+@delivery_bp.route('/pedido/<int:pedido_id>/productos_disponibles', methods=['GET'])
+def productos_disponibles(pedido_id):
+    """Retorna la lista de productos disponibles para agregar al pedido"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido or pedido.estado_delivery != 1:
+            return '', 403
+        
+        # Obtener productos activos
+        productos = Producto.query.filter_by(estado=1).all()
+        
+        return render_template('ventas/delivery/_partials/productos_disponibles.html',
+                              productos=productos,
+                              pedido_id=pedido_id)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/agregar_producto', methods=['POST'])
+def agregar_producto_pedido(pedido_id):
+    """Agrega un nuevo producto al pedido en preparación"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido:
+            return jsonify({'error': 'Pedido no encontrado'}), 404
+        
+        if pedido.estado_delivery != 1:
+            return jsonify({'error': 'No se puede modificar un pedido enviado'}), 403
+        
+        producto_id = request.form.get('producto_id')
+        producto = Producto.query.get(producto_id)
+        
+        if not producto:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+        
+        # Verificar si el producto ya existe en el pedido
+        producto_existente = ProductoVenta.query.filter_by(
+            venta_id=pedido_id,
+            producto_id=producto_id
+        ).first()
+        
+        if producto_existente:
+            # Si ya existe, aumentar cantidad
+            producto_existente.cantidad += 1
+        else:
+            # Si no existe, crear nuevo registro
+            nuevo_producto = ProductoVenta(
+                venta_id=pedido_id,
+                producto_id=producto_id,
+                cantidad=1,
+                precio_venta=producto.precio,
+                descuento=0
+            )
+            db.session.add(nuevo_producto)
+        
+        # Recalcular total del pedido
+        db.session.flush()
+        productos_pedido = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        pedido.total = sum(float(p.precio_venta) * p.cantidad for p in productos_pedido)
+        
+        db.session.commit()
+        
+        return _render_items_pedido(pedido_id)
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+    
+    
+    
