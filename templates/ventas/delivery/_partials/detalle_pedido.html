@@ -106,7 +106,7 @@
                     </div>
                     <div class="info-box info-box-bordered">
                         <svg class="icon text-muted" viewBox="0 0 24 24">
-                            <pin d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></pin>
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                             <circle cx="12" cy="10" r="3"></circle>
                         </svg>
                         <div>
@@ -182,6 +182,23 @@
                             <span class="summary-label">Total:</span>
                             <span class="summary-value">${{ total_con_envio }}</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado del Pedido y Acciones -->
+            <div class="card card-shadow-medium">
+                <div class="card-header">
+                    <h2 class="section-header">
+                        <svg class="icon text-primary" viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Estado del Pedido
+                    </h2>
+                </div>
+                <div class="card-content">
+                    <div id="estado-pedido-container">
+                        {% include 'ventas/delivery/_partials/estado_pedido.html' %}
                     </div>
                 </div>
             </div>

@@ -311,3 +311,27 @@ def ventas_estado(estado):
         return render_template('ventas/delivery/_partials/pedidos.html', ventas=ventas)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+
+@delivery_bp.route('/cambiar_estado/<int:pedido_id>/<int:nuevo_estado>', methods=['POST'])
+def cambiar_estado(pedido_id, nuevo_estado):
+    try:
+        # Validar que el estado sea válido (1, 2 o 3)
+        if nuevo_estado not in [1, 2, 3]:
+            return jsonify({'error': 'Estado no válido'}), 400
+
+        # Obtener el pedido
+        pedido = Venta.query.get(pedido_id)
+        if not pedido:
+            return jsonify({'error': 'Pedido no encontrado'}), 404
+
+        # Actualizar el estado
+        pedido.estado_delivery = nuevo_estado
+        db.session.commit()
+
+        # Devolver el fragmento actualizado
+        return render_template('ventas/delivery/_partials/estado_pedido.html', pedido=pedido)
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
