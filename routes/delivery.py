@@ -283,10 +283,16 @@ def detalle_pedido(pedido_id):
 
         productos = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
         cliente = Cliente.query.get(pedido.cliente_id)
+        
+        # Calcular el total incluyendo el costo de envío
+        costo_envio = pedido.costo_envio if pedido.costo_envio is not None else 0
+        total_con_envio = pedido.total + costo_envio
 
         return render_template('ventas/delivery/_partials/detalle_pedido.html',
                                pedido=pedido,
                                productos=productos,
+                               total_con_envio=total_con_envio,
+                               costo_envio=costo_envio,
                                cliente=cliente)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
