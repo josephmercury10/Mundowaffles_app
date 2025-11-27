@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 #from flask_sqlalchemy import SQLAlchemy
 from config import config
 from utils.db import db
+from utils.filters import register_filters
 
 # Importar los blueprints
 from routes.marcas import marcas_bp
@@ -25,6 +26,8 @@ conexion = MySQL(app)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/dbmundo'
 #app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
+
+register_filters(app)
 
 
 # Registrar los blueprints

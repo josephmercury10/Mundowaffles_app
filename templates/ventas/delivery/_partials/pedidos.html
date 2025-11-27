@@ -26,7 +26,7 @@
     </td>
     <td>{{ venta.repartidor.persona.razon_social if venta.repartidor else 'Sin repartidor' }}</td>
     <td>{{ venta.fecha_hora|timeago }}</td> <!-- Nueva columna con tiempo transcurrido -->
-    <td>${{ venta.total }}</td>
+    <td>${{ venta.total|format_price }}</td>
     <td>
         <button class="btn btn-sm btn-warning">Enviar</button>
     </td>

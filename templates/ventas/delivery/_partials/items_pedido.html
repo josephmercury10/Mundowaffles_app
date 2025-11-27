@@ -5,11 +5,11 @@
             <div class="quantity-badge">{{ producto.cantidad }}</div>
             <div>
                 <p class="item-name">{{ producto.producto.nombre }}</p>
-                <p class="item-details">{{ producto.cantidad }} × ${{ producto.precio_venta }}</p>
+                <p class="item-details">{{ producto.cantidad }} × ${{ producto.precio_venta|format_price }}</p>
             </div>
         </div>
         <div class="item-actions">
-            <p class="item-price">${{ producto.cantidad * producto.precio_venta }}</p>
+            <p class="item-price">${{ (producto.cantidad * producto.precio_venta)|format_price }}</p>
             {% if pedido.estado_delivery == 1 %}
             <div class="action-buttons">
                 <!-- Botón disminuir -->
@@ -92,6 +92,6 @@
 <div class="card-footer">
     <div class="summary-row summary-total">
         <span class="summary-label">Total:</span>
-        <span class="summary-value">${{ total_con_envio }}</span>
+        <span class="summary-value">${{ total_con_envio|format_price }}</span>
     </div>
 </div>

@@ -3,7 +3,7 @@
     <div class="producto-card">
         <div class="producto-card-body">
             <h4 class="producto-card-nombre">{{ producto.nombre }}</h4>
-            <p class="producto-card-precio">${{ producto.precio }}</p>
+            <p class="producto-card-precio">${{ producto.precio|format_price }}</p>
         </div>
         <button class="btn-agregar-producto"
                 hx-post="/delivery/pedido/{{ pedido_id }}/agregar_producto"
