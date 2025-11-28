@@ -1,49 +1,49 @@
-<div class="estado-pedido">
-    <!-- Indicador de estado actual -->
-    <div class="estado-actual mb-3">
-        <span class="estado-label">Estado actual:</span>
-        {% if pedido.estado_delivery == 1 %}
-            <span class="badge badge-preparacion">En Preparación</span>
-        {% elif pedido.estado_delivery == 2 %}
-            <span class="badge badge-enviado">Enviado</span>
-        {% elif pedido.estado_delivery == 3 %}
-            <span class="badge badge-entregado">Entregado</span>
-        {% endif %}
-    </div>
-
-    <!-- Botón para cambiar estado -->
+<div class="estado-actual">
     {% if pedido.estado_delivery == 1 %}
-        <button class="btn btn-primary btn-lg w-100"
+        <div class="alert alert-warning">
+            <svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+            <span>En Preparación</span>
+        </div>
+        <button class="btn btn-warning btn-block"
                 hx-post="/delivery/cambiar_estado/{{ pedido.id }}/2"
                 hx-target="#estado-pedido-container"
-                hx-swap="innerHTML"
-                hx-confirm="¿Marcar pedido como Enviado?">
-            <svg class="icon icon-sm me-2" viewBox="0 0 24 24">
+                hx-swap="innerHTML">
+            <svg class="icon" viewBox="0 0 24 24">
                 <rect x="1" y="3" width="15" height="13"></rect>
                 <polygon points="16,8 20,8 23,11 23,16 16,16"></polygon>
                 <circle cx="5.5" cy="18.5" r="2.5"></circle>
                 <circle cx="18.5" cy="18.5" r="2.5"></circle>
             </svg>
-            Enviar Pedido
+            Marcar como En Camino
         </button>
     {% elif pedido.estado_delivery == 2 %}
-        <button class="btn btn-success btn-lg w-100"
+        <div class="alert alert-info">
+            <svg class="icon" viewBox="0 0 24 24">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16,8 20,8 23,11 23,16 16,16"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+            <span>En Camino</span>
+        </div>
+        <button class="btn btn-success btn-block"
                 hx-post="/delivery/cambiar_estado/{{ pedido.id }}/3"
                 hx-target="#estado-pedido-container"
-                hx-swap="innerHTML"
-                hx-confirm="¿Marcar pedido como Entregado?">
-            <svg class="icon icon-sm me-2" viewBox="0 0 24 24">
-                <polyline points="20 6 9 17 4 12"></polyline>
+                hx-swap="innerHTML">
+            <svg class="icon" viewBox="0 0 24 24">
+                <polyline points="20,6 9,17 4,12"></polyline>
             </svg>
             Marcar como Entregado
         </button>
     {% elif pedido.estado_delivery == 3 %}
-        <div class="alert alert-success text-center">
-            <svg class="icon icon-sm me-2" viewBox="0 0 24 24">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        <div class="alert alert-success">
+            <svg class="icon" viewBox="0 0 24 24">
+                <polyline points="20,6 9,17 4,12"></polyline>
             </svg>
-            Pedido Completado
+            <span>Pedido Entregado</span>
         </div>
     {% endif %}
 </div>

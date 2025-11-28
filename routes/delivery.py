@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, session, flash
+from flask import Blueprint, request, jsonify, render_template, session, flash, make_response
 from datetime import datetime
 from src.models.Persona_model import Persona
 from src.models.Cliente_model import Cliente
@@ -325,12 +325,38 @@ def cambiar_estado(pedido_id, nuevo_estado):
         if not pedido:
             return jsonify({'error': 'Pedido no encontrado'}), 404
 
+        estado_anterior = pedido.estado_delivery
+
         # Actualizar el estado
         pedido.estado_delivery = nuevo_estado
         db.session.commit()
 
-        # Devolver el fragmento actualizado
-        return render_template('ventas/delivery/_partials/estado_pedido.html', pedido=pedido)
+        # Detectar desde dónde se llamó
+        hx_target = request.headers.get('HX-Target', '')
+        
+        # Crear respuesta con headers HX-Trigger para refrescar tablas
+        if 'estado-pedido-container' in hx_target:
+            # Desde detalle - devolver partial + trigger para refrescar tablas
+            response = make_response(
+                render_template('ventas/delivery/_partials/estado_pedido.html', pedido=pedido)
+            )
+        else:
+            # Desde lista - respuesta vacía
+            response = make_response('', 200)
+        
+        # Agregar trigger para refrescar las tablas afectadas
+        triggers = []
+        if estado_anterior == 1 or nuevo_estado == 1:
+            triggers.append('refresh-pendientes')
+        if estado_anterior == 2 or nuevo_estado == 2:
+            triggers.append('refresh-enviados')
+        if estado_anterior == 3 or nuevo_estado == 3:
+            triggers.append('refresh-entregados')
+        
+        if triggers:
+            response.headers['HX-Trigger'] = ', '.join(triggers)
+        
+        return response
 
     except Exception as e:
         db.session.rollback()

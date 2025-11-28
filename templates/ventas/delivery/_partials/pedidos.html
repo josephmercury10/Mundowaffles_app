@@ -28,7 +28,25 @@
     <td>{{ venta.fecha_hora|timeago }}</td> <!-- Nueva columna con tiempo transcurrido -->
     <td>${{ venta.total|format_price }}</td>
     <td>
-        <button class="btn btn-sm btn-warning">Enviar</button>
+        {% if venta.estado_delivery == 1 %}
+            <button class="btn btn-sm btn-warning"
+                    hx-post="/delivery/cambiar_estado/{{ venta.id }}/2"
+                    hx-trigger="click"
+                    onclick="event.stopPropagation()">
+                Enviar
+            </button>
+        {% elif venta.estado_delivery == 2 %}
+            <button class="btn btn-sm btn-success"
+                    hx-post="/delivery/cambiar_estado/{{ venta.id }}/3"
+                    hx-trigger="click"
+                    onclick="event.stopPropagation()">
+                Entregar
+            </button>
+        {% elif venta.estado_delivery == 3 %}
+            <span class="badge bg-success">Entregado</span>
+        {% else %}
+            <span class="badge bg-secondary">{{ venta.estado_delivery }}</span>
+        {% endif %}
     </td>
 </tr>
 {% endfor %}
