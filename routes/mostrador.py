@@ -149,9 +149,10 @@ def guardar_pedido():
         
         # Crear la venta
         venta = Venta(
-            fecha_hora=datetime.now(),
+            fecha_hora=db.func.current_timestamp(),
             total=total,
-            impuesto=0,
+            impuesto=0.19,
+            numero_comprobante=f"V-{datetime.now().strftime('%Y%m%d%H%M%S')}",
             estado=1,  # Activo
             estado_mostrador=1,  # 1=En Preparación
             estado_delivery=0,  # No aplica para mostrador
