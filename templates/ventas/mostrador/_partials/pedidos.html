@@ -10,7 +10,19 @@
         {% set item_count = venta.productos|length if venta.productos else 0 %}
         {{ item_count }} item{{ 's' if item_count != 1 else '' }}
     </td>
+    {% if venta.estado_mostrador == 3 %}
+    <!-- Columna Comprobante para pedidos pagados -->
+    <td>
+        {% if venta.comprobante %}
+            <span class="badge bg-secondary">{{ venta.comprobante.tipo_comprobante }}</span>
+        {% else %}
+            <span class="badge bg-light text-dark">{{ venta.numero_comprobante or '-' }}</span>
+        {% endif %}
+    </td>
+    {% else %}
+    <!-- Columna Tiempo para pedidos en preparación o listos -->
     <td>{{ venta.fecha_hora|timeago if venta.fecha_hora else '-' }}</td>
+    {% endif %}
     <td>${{ venta.total|format_price }}</td>
     <td>
         {% if venta.estado_mostrador == 1 %}
@@ -21,7 +33,15 @@
                 Listo
             </button>
         {% elif venta.estado_mostrador == 2 %}
-            <span class="badge bg-success">Listo</span>
+            <button class="btn btn-sm btn-primary"
+                    hx-get="/mostrador/detalle_pedido/{{ venta.id }}"
+                    hx-target="#right_panel"
+                    hx-swap="innerHTML"
+                    onclick="event.stopPropagation()">
+                💰 Cobrar
+            </button>
+        {% elif venta.estado_mostrador == 3 %}
+            <span class="badge bg-success">✓ Pagado</span>
         {% endif %}
     </td>
 </tr>

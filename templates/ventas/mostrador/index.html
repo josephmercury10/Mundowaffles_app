@@ -53,17 +53,17 @@
                 </table>
             </div>
 
-            <!-- Tabla de Pedidos Listos -->
+            <!-- Tabla de Pedidos Listos (Pendientes de Pago) -->
             <div class="delivery-section">
-                <div class="section-header entregados">
-                    <h3>Listos para Entregar</h3>
+                <div class="section-header enviados">
+                    <h3>Listos - Pendientes de Pago</h3>
                 </div>
                 <table id="listos-table" class="table table-hover" 
                        hx-get="/mostrador/pedidos_estado/2" 
                        hx-trigger="load, refresh-listos from:body"
                        hx-target="#listos-table-body" 
                        hx-swap="innerHTML">
-                    <thead class="table-success">
+                    <thead class="table-info">
                         <tr>
                             <th>ID</th>
                             <th>Hora</th>
@@ -75,6 +75,33 @@
                         </tr>
                     </thead>
                     <tbody id="listos-table-body">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tabla de Pedidos Pagados -->
+            <div class="delivery-section">
+                <div class="section-header entregados">
+                    <h3>Pagados</h3>
+                </div>
+                <table id="pagados-table" class="table table-hover" 
+                       hx-get="/mostrador/pedidos_estado/3" 
+                       hx-trigger="load, refresh-pagados from:body"
+                       hx-target="#pagados-table-body" 
+                       hx-swap="innerHTML">
+                    <thead class="table-success">
+                        <tr>
+                            <th>ID</th>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Items</th>
+                            <th>Comprobante</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagados-table-body">
                         <!-- Se llena dinámicamente -->
                     </tbody>
                 </table>

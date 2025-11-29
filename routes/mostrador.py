@@ -241,8 +241,8 @@ def detalle_pedido(pedido_id):
 def cambiar_estado(pedido_id, nuevo_estado):
     """Cambia el estado de un pedido de mostrador"""
     try:
-        # Validar que el estado sea válido (1=Preparación, 2=Listo)
-        if nuevo_estado not in [1, 2]:
+        # Validar que el estado sea válido (1=Preparación, 2=Listo, 3=Pagado)
+        if nuevo_estado not in [1, 2, 3]:
             return jsonify({'error': 'Estado no válido'}), 400
 
         pedido = Venta.query.get(pedido_id)
@@ -272,12 +272,60 @@ def cambiar_estado(pedido_id, nuevo_estado):
             triggers.append('refresh-preparacion')
         if estado_anterior == 2 or nuevo_estado == 2:
             triggers.append('refresh-listos')
+        if estado_anterior == 3 or nuevo_estado == 3:
+            triggers.append('refresh-pagados')
         
         if triggers:
             response.headers['HX-Trigger'] = ', '.join(triggers)
         
         return response
 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@mostrador_bp.route('/cobrar_pedido/<int:pedido_id>', methods=['POST'])
+def cobrar_pedido(pedido_id):
+    """Cobra el pedido y lo marca como pagado"""
+    try:
+        pedido = Venta.query.get_or_404(pedido_id)
+        items = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        
+        # Obtener tipo de comprobante del formulario
+        tipo_comprobante_id = request.form.get('tipo_comprobante', 1)
+        
+        # Actualizar pedido
+        pedido.estado_mostrador = 3  # Pagado
+        pedido.comprobante_id = int(tipo_comprobante_id)
+        
+        # Generar número de comprobante
+        from src.models.Comprobante_model import Comprobante
+        comprobante = Comprobante.query.get(tipo_comprobante_id)
+        tipo_prefijo = "B" if tipo_comprobante_id == 1 else "F"
+        pedido.numero_comprobante = f"{tipo_prefijo}-{pedido.id:06d}"
+        
+        db.session.commit()
+        
+        # Imprimir recibo de venta
+        try:
+            from flask import current_app
+            printer = get_printer(current_app)
+            printer.imprimir_pedido_mostrador(pedido, items)
+        except Exception as e:
+            print(f"Error al imprimir recibo: {str(e)}")
+        
+        # Retornar vista de pago confirmado
+        response = make_response(
+            render_template('ventas/mostrador/_partials/pago_confirmado.html',
+                          pedido=pedido,
+                          items=items,
+                          comprobante=comprobante)
+        )
+        response.headers['HX-Trigger'] = 'refresh-listos, refresh-pagados'
+        
+        return response
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

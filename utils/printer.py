@@ -5,6 +5,19 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Comandos ESC/POS para impresoras térmicas
+ESC = b'\x1b'  # Escape
+GS = b'\x1d'   # Group Separator
+
+# Comando de corte de papel (parcial)
+CUT_PAPER = GS + b'V\x01'  # Corte parcial
+# Comando de corte de papel (total)  
+CUT_PAPER_FULL = GS + b'V\x00'  # Corte total
+
+# Avance de líneas
+FEED_LINES = lambda n: ESC + b'd' + bytes([n])  # Avanza n líneas
+
+
 class ThermalPrinter:
     def __init__(self, printer_name=None):
         """
@@ -51,6 +64,10 @@ class ThermalPrinter:
                 # Convertir contenido a bytes y enviar
                 contenido_bytes = contenido.encode('utf-8', errors='replace')
                 win32print.WritePrinter(hprinter, contenido_bytes)
+                
+                # Avanzar papel y cortar
+                win32print.WritePrinter(hprinter, FEED_LINES(5))  # 5 líneas de avance
+                win32print.WritePrinter(hprinter, CUT_PAPER)  # Corte parcial
                 
                 win32print.EndPagePrinter(hprinter)
                 win32print.EndDocPrinter(hprinter)
@@ -173,6 +190,11 @@ class ThermalPrinter:
                 win32print.StartPagePrinter(hprinter)
                 contenido_bytes = contenido.encode('utf-8', errors='replace')
                 win32print.WritePrinter(hprinter, contenido_bytes)
+                
+                # Avanzar papel y cortar
+                win32print.WritePrinter(hprinter, FEED_LINES(5))  # 5 líneas de avance
+                win32print.WritePrinter(hprinter, CUT_PAPER)  # Corte parcial
+                
                 win32print.EndPagePrinter(hprinter)
                 win32print.EndDocPrinter(hprinter)
                 
@@ -258,6 +280,11 @@ class ThermalPrinter:
                 win32print.StartPagePrinter(hprinter)
                 contenido_bytes = contenido.encode('utf-8', errors='replace')
                 win32print.WritePrinter(hprinter, contenido_bytes)
+                
+                # Avanzar papel y cortar
+                win32print.WritePrinter(hprinter, FEED_LINES(5))  # 5 líneas de avance
+                win32print.WritePrinter(hprinter, CUT_PAPER)  # Corte parcial
+                
                 win32print.EndPagePrinter(hprinter)
                 win32print.EndDocPrinter(hprinter)
                 

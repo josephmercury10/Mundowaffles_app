@@ -91,7 +91,9 @@
                                 {% if pedido.estado_mostrador == 1 %}
                                     <span class="badge bg-warning text-dark">En Preparación</span>
                                 {% elif pedido.estado_mostrador == 2 %}
-                                    <span class="badge bg-success">Listo</span>
+                                    <span class="badge bg-info">Listo - Pendiente de Pago</span>
+                                {% elif pedido.estado_mostrador == 3 %}
+                                    <span class="badge bg-success">Pagado</span>
                                 {% endif %}
                             </p>
                         </div>
