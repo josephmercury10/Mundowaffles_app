@@ -103,19 +103,66 @@ pip freeze > requirements.txt
 ## Flujo de Delivery (Módulo en Desarrollo Activo)
 ⚠️ **Estado**: En desarrollo activo - funcionalidades pendientes y corrección de errores en curso.
 
+### Flujo General
 1. `routes/delivery.py` maneja todo el flujo de pedidos (~500 líneas)
 2. Usa `session` de Flask para mantener estado del carrito
 3. Renderiza partials dinámicamente para UX fluida (ver `templates/ventas/delivery/_partials/`)
 4. Modelo `ProductoVenta` almacena atributos seleccionados como JSON
+5. Estados del pedido: 1=En Preparación, 2=En Camino, 3=Entregado
+6. **Cambio de estado**: Ruta POST `/delivery/cambiar_estado/<int:pedido_id>/<int:nuevo_estado>` detecta automáticamente si se llama desde lista o detalle y actualiza tablas con HTMX
+
+### Impresión Térmica
+**Hardware**: EPSON TM-T88V Receipt5 (USB)  
+**Librería**: `pywin32` (usa Windows Print Spooler)  
+**Configuración** en `config.py`:
+```python
+PRINTER_NAME = 'EPSON TM-T88V Receipt5'
+```
+
+**Implementación**:
+- `utils/printer.py` → Clase `ThermalPrinter` con método `imprimir_pedido(pedido, cliente, items, total_con_envio)`
+- Ruta: POST `/delivery/imprimir_pedido/<int:pedido_id>` en `routes/delivery.py`
+- Botón en `templates/ventas/delivery/_partials/detalle_pedido.html` (Order Header)
+- Formato de recibo: 42 caracteres de ancho (80mm estándar)
+- **Requisito crítico**: Ejecutar Flask como administrador (necesario para acceso a impresora térmica vía Windows Print Spooler)
+
+**Flujo de impresión**:
+1. Usuario hace click en botón "Imprimir" en detalle del pedido
+2. POST a `/delivery/imprimir_pedido/<pedido_id>` vía HTMX
+3. Backend obtiene pedido, cliente e items
+4. Genera recibo con método `_generar_recibo()` (formato texto ESC/POS)
+5. Abre conexión a impresora con `win32print.OpenPrinter()`
+6. Envía documento a Windows Print Spooler
+7. Retorna JSON con estado (success/error)
+
+**Dependencias**:
+```
+pywin32>=305
+```
 
 ### Archivos clave del módulo:
-- `routes/delivery.py` - Controlador principal
-- `templates/ventas/delivery/index.html` - Vista principal
-- `templates/ventas/delivery/_partials/` - Componentes: carrito, pedidos, cliente, etc.
+- `routes/delivery.py` - Controlador principal + ruta de impresión
+- `templates/ventas/delivery/index.html` - Vista principal con 3 tablas (Pendientes/Enviados/Entregados)
+- `templates/ventas/delivery/_partials/detalle_pedido.html` - Botón de impresión en Order Header
+- `templates/ventas/delivery/_partials/pedidos.html` - Fila de tabla con botones de cambio de estado
+- `templates/ventas/delivery/_partials/estado_pedido.html` - Selector de estado con triggers HTMX
+- `templates/ventas/delivery/_partials/` - Otros componentes: carrito, cliente, resumen, etc.
 - `forms.py` → `DeliveryForm` - Formulario del pedido
+- `utils/printer.py` - Clase para gestión de impresora térmica + función `get_printer(app)`
+
+### Actualización de tablas vía HTMX
+Las 3 tablas se actualizan automáticamente cuando cambia estado:
+- Tabla pendientes: `id="pendientes-table"` + `hx-trigger="load, refresh-pendientes from:body"`
+- Tabla enviados: `id="enviados-table"` + `hx-trigger="load, refresh-enviados from:body"`
+- Tabla entregados: `id="entregados-table"` + `hx-trigger="load, refresh-entregados from:body"`
+
+Backend envía header `HX-Trigger` con eventos para refrescar tablas afectadas tras cambio de estado.
 
 ## Notas Importantes
 - El proyecto usa español para nombres de variables, modelos y rutas
 - Campo `estado` en modelos: 1=activo, 0=inactivo (no eliminar registros)
 - Archivos estáticos en `static/` (css, js, uploads)
 - Imágenes de productos en `static/uploads/images/`
+- **Impresora**: Requiere estar conectada en puerto USB y driver EPSON TM-T88V instalado en Windows
+- **Windows Print Spooler**: Servicio que debe estar activo (verificar en Servicios de Windows)
+- **Permisos**: Flask debe ejecutarse como administrador para acceder a impresora térmica

@@ -36,6 +36,12 @@ class DeliveryForm(FlaskForm):
     costo_envio = SelectField('Costo de Envío:', choices=[('1500', '$1.500'), ('2000', '$2.000'), ('2500', '$2.500')], validators=[DataRequired()])
     submit = SubmitField('Crear')
     
+
+class MostradorForm(FlaskForm):
+    cliente = StringField('Cliente:', validators=[Optional(), length(max=80)])
+    comentarios = TextAreaField('Notas:', validators=[Optional(), length(max=200)])
+    submit = SubmitField('Continuar')
+    
 class ProductoForm(FlaskForm):
     codigo = StringField('Código:', validators=[DataRequired(), length(min=1, max=50)])
     nombre = StringField('Nombre:', validators=[DataRequired(message="El nombre es obligatorio."), length(min=1, max=80)])

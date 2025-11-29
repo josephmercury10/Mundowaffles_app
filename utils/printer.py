@@ -149,6 +149,90 @@ class ThermalPrinter:
         
         return "\n".join(lineas)
     
+    def imprimir_pedido_mostrador(self, pedido, items):
+        """
+        Imprime el detalle de un pedido de mostrador
+        """
+        if not self.printer:
+            logger.error("Impresora no disponible")
+            return False
+        
+        try:
+            contenido = self._generar_recibo_mostrador(pedido, items)
+            
+            hprinter = win32print.OpenPrinter(self.printer)
+            
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Recibo Mostrador", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                contenido_bytes = contenido.encode('utf-8', errors='replace')
+                win32print.WritePrinter(hprinter, contenido_bytes)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+                
+                logger.info(f"Pedido mostrador {pedido.id} impreso exitosamente")
+                return True
+                
+            finally:
+                win32print.ClosePrinter(hprinter)
+                
+        except Exception as e:
+            logger.error(f"Error al imprimir: {str(e)}")
+            return False
+    
+    def _generar_recibo_mostrador(self, pedido, items):
+        """Genera el contenido del recibo de mostrador"""
+        
+        lineas = []
+        ancho = 42
+        
+        # Encabezado
+        lineas.append(self._centrar("MUNDO WAFFLES", ancho))
+        lineas.append(self._centrar("Mostrador", ancho))
+        lineas.append(self._centrar("=" * ancho, ancho))
+        lineas.append("")
+        
+        # Información del pedido
+        lineas.append(f"Pedido #: {pedido.id}")
+        lineas.append(f"Fecha: {pedido.fecha_hora.strftime('%d/%m/%Y %H:%M')}")
+        if pedido.comentarios:
+            lineas.append(f"Cliente: {pedido.comentarios}")
+        lineas.append("")
+        
+        lineas.append(self._centrar("=" * ancho, ancho))
+        lineas.append("")
+        
+        # Items
+        lineas.append("ITEMS:")
+        lineas.append("")
+        
+        for item in items:
+            cantidad = item.cantidad
+            producto = item.producto.nombre[:30]
+            precio_venta = float(item.precio_venta)
+            subtotal = cantidad * precio_venta
+            
+            lineas.append(f"{producto}")
+            lineas.append(f"  x{cantidad} @ ${precio_venta:.2f} = ${subtotal:.2f}")
+            lineas.append("")
+        
+        # Resumen
+        lineas.append(self._centrar("=" * ancho, ancho))
+        lineas.append("")
+        
+        total = float(pedido.total)
+        lineas.append("-" * ancho)
+        lineas.append(f"TOTAL:                 ${total:>8.2f}")
+        lineas.append("")
+        lineas.append("")
+        
+        lineas.append(self._centrar("Gracias por su compra!", ancho))
+        lineas.append("")
+        lineas.append("")
+        lineas.append("")
+        
+        return "\n".join(lineas)
+    
     def _centrar(self, texto, ancho):
         """Centra texto en el ancho especificado"""
         if len(texto) >= ancho:

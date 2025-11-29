@@ -85,6 +85,7 @@ def save():
             # Inicializar carrito en sesión
             session['carrito'] = {}
             session['cliente_data'] = cliente_data
+            session['pedido_data'] = pedido_data
             session['costo_envio'] = envio
             
             productos = Producto.query.filter_by(estado=1).all()
@@ -305,8 +306,12 @@ def ventas_estado(estado):
         # Convertir el estado a un entero
         estado = int(estado)
 
-        # Filtrar las ventas según el estado
-        ventas = Venta.query.filter_by(estado_delivery=estado).all()
+        # Filtrar las ventas de delivery según el estado
+        # tipoventa_id=2 para delivery
+        ventas = Venta.query.filter(
+            Venta.estado_delivery == estado,
+            Venta.tipoventa_id == 2
+        ).order_by(Venta.fecha_hora.desc()).all()
 
         # Renderizar un fragmento de HTML con las ventas
         return render_template('ventas/delivery/_partials/pedidos.html', ventas=ventas)

@@ -1,0 +1,101 @@
+<div class="card card-shadow-order">
+    <!-- Order Header -->
+    <div class="order-header">
+        <div class="order-title">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <h1>PEDIDO #{{ pedido.id }}</h1>
+        </div>
+        <div class="badge bg-info">
+            🏪 Mostrador
+        </div>
+        <button class="btn btn-sm btn-outline-primary"
+                hx-post="/mostrador/imprimir_pedido/{{ pedido.id }}"
+                hx-swap="none"
+                title="Imprimir recibo">
+            🖨️ Imprimir
+        </button>
+    </div>
+</div>
+
+<!-- Información del Pedido -->
+<div class="card card-shadow-medium mt-3">
+    <div class="card-header">
+        <h5 class="mb-0">Información del Pedido</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Fecha:</strong> {{ pedido.fecha_hora.strftime('%d/%m/%Y %H:%M') if pedido.fecha_hora else '-' }}</p>
+                <p><strong>Cliente:</strong> {{ pedido.comentarios if pedido.comentarios else 'Cliente Mostrador' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Estado:</strong> 
+                    {% if pedido.estado_mostrador == 1 %}
+                        <span class="badge bg-warning">En Preparación</span>
+                    {% elif pedido.estado_mostrador == 2 %}
+                        <span class="badge bg-success">Listo</span>
+                    {% endif %}
+                </p>
+                <p><strong>Tiempo:</strong> {{ pedido.fecha_hora|timeago if pedido.fecha_hora else '-' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Items del Pedido -->
+<div class="card card-shadow-medium mt-3">
+    <div class="card-header">
+        <h5 class="mb-0">Productos ({{ items|length }})</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Producto</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.producto.nombre }}</td>
+                    <td class="text-center">{{ item.cantidad }}</td>
+                    <td class="text-end">${{ item.precio_venta|format_price }}</td>
+                    <td class="text-end">${{ (item.precio_venta * item.cantidad)|format_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+                <tr>
+                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                    <td class="text-end"><strong class="text-primary">${{ pedido.total|format_price }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- Cambiar Estado -->
+<div id="estado-pedido-container" class="card card-shadow-medium mt-3">
+    <div class="card-body">
+        {% if pedido.estado_mostrador == 1 %}
+            <button class="btn btn-success w-100"
+                    hx-post="/mostrador/cambiar_estado/{{ pedido.id }}/2"
+                    hx-target="#estado-pedido-container"
+                    hx-swap="innerHTML">
+                ✓ Marcar como Listo
+            </button>
+        {% elif pedido.estado_mostrador == 2 %}
+            <div class="alert alert-success mb-0 text-center">
+                <strong>✓ Pedido Listo para Entregar</strong>
+            </div>
+        {% endif %}
+    </div>
+</div>

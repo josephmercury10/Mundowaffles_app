@@ -13,7 +13,7 @@
         {% block left_panel %}            
             <div class="nav-tabs">
                 <div class="nav-tab">Mesas</div>
-                <div class="nav-tab">Mostrador</div>
+                <a href="{{ url_for('mostrador.index') }}" class="nav-tab">Mostrador</a>
                 <div class="nav-tab active">Delivery</div>
                 <div class="nuevo-pedido-btn">
                     <button class="btn btn-success" 

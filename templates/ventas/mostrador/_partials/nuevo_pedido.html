@@ -1,0 +1,58 @@
+<div class="new-order-panel">
+    <div class="new-order-header">NUEVO PEDIDO - MOSTRADOR</div>
+</div>
+
+<div class="container w-100 border border-3 border-wa rounded p-4 mt-3">
+    <form id="pedido-form" hx-post="/mostrador/crear_pedido" hx-target="#right_panel" hx-swap="innerHTML">
+        {{ form.csrf_token }}
+        <div class="row g-3">
+            <!-- Cliente (opcional) -->
+            <div class="col-md-6 mb-2">
+                {{ form.cliente.label(class="form-label") }}
+                {{ form.cliente(class="form-control", placeholder="Cliente Mostrador") }}
+            </div>
+
+            <!-- Comentarios -->
+            <div class="col-md-6 mb-2">
+                {{ form.comentarios.label(class="form-label") }}
+                {{ form.comentarios(class="form-control", placeholder="Notas del pedido...") }}
+            </div>
+
+            <!-- Botón Continuar -->
+            <div class="col-md-12 mt-3 text-end">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Vista previa de productos disponibles -->
+<div class="card card-shadow-medium mt-4">
+    <div class="card-header">
+        <h5>Productos Disponibles</h5>
+    </div>
+    <div class="card-content p-3">
+        <div class="row" id="productos-grid">
+            {% for producto in productos %}
+            <div class="col-md-4 col-lg-3 mb-3">
+                <div class="card product-card h-100">
+                    {% if producto.img_path %}
+                    <img src="{{ url_for('static', filename='uploads/images/' + producto.img_path) }}" 
+                         class="card-img-top" alt="{{ producto.nombre }}"
+                         style="object-fit: cover; height: 120px;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                         style="height: 120px;">
+                        <span class="text-muted small">Sin imagen</span>
+                    </div>
+                    {% endif %}
+                    <div class="card-body p-2">
+                        <h6 class="card-title small mb-1">{{ producto.nombre }}</h6>
+                        <span class="text-primary fw-bold">${{ producto.precio|format_price }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

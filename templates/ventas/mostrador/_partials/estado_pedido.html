@@ -1,0 +1,12 @@
+{% if pedido.estado_mostrador == 1 %}
+    <button class="btn btn-success w-100"
+            hx-post="/mostrador/cambiar_estado/{{ pedido.id }}/2"
+            hx-target="#estado-pedido-container"
+            hx-swap="innerHTML">
+        ✓ Marcar como Listo
+    </button>
+{% elif pedido.estado_mostrador == 2 %}
+    <div class="alert alert-success mb-0 text-center">
+        <strong>✓ Pedido Listo para Entregar</strong>
+    </div>
+{% endif %}

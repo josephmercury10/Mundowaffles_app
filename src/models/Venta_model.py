@@ -72,6 +72,7 @@ class Venta(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     tipoventa_id = db.Column(db.BigInteger, db.ForeignKey('tipoventas.id'), nullable=True)
     estado_delivery = db.Column(db.SmallInteger, nullable=False, default=1)  # 1: en preparacion, 2: enviado, 3: entregado
+    estado_mostrador = db.Column(db.SmallInteger, nullable=True, default=1)  # 1: en preparacion, 2: listo
     costo_envio = db.Column(db.Numeric(10, 0), nullable=True, default=0)
     repartidor_id = db.Column(db.Integer, db.ForeignKey('repartidores.id'), nullable=True)
     comentarios = db.Column(db.String(50), nullable=True)
