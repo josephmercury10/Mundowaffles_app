@@ -7,6 +7,7 @@ from src.models.Producto_model import Producto
 from src.models.Venta_model import Venta
 from src.models.Venta_model import ProductoVenta
 from utils.db import db
+from utils.printer import get_printer
 from forms import DeliveryForm
 
 delivery_bp = Blueprint('delivery', __name__, url_prefix='/delivery')
@@ -519,4 +520,29 @@ def agregar_producto_pedido(pedido_id):
         return jsonify({'error': str(e)}), 500
     
     
-    
+
+@delivery_bp.route('/imprimir_pedido/<int:pedido_id>', methods=['POST'])
+def imprimir_pedido(pedido_id):
+    """
+    Imprime el detalle del pedido en la impresora térmica
+    """
+    try:
+        pedido = Venta.query.get_or_404(pedido_id)
+        cliente = pedido.cliente
+        items = pedido.productos  # Relación con ProductoVenta
+        total_con_envio = float(pedido.total) + (float(pedido.costo_envio) if pedido.costo_envio else 0)
+        
+        # Obtener instancia de impresora
+        printer = get_printer()
+        
+        # Imprimir
+        resultado = printer.imprimir_pedido(pedido, cliente, items, total_con_envio)
+        printer.cerrar()
+        
+        if resultado:
+            return jsonify({'success': True, 'message': 'Pedido impreso exitosamente'}), 200
+        else:
+            return jsonify({'success': False, 'message': 'Error al imprimir'}), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500

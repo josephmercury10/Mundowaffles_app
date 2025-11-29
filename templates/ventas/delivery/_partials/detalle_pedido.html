@@ -27,6 +27,16 @@
                         </svg>
                         Delivery
                     </div>
+                    <button class="btn btn-sm btn-outline-primary"
+                            hx-post="/delivery/imprimir_pedido/{{ pedido.id }}"
+                            hx-on::after-request="if(event.detail.xhr.status === 200) { alert('Pedido impreso exitosamente'); } else { alert('Error al imprimir'); }"
+                            title="Imprimir recibo">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                    </button>
                 </div>
             </div>
 

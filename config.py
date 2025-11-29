@@ -9,6 +9,9 @@ class DevelopmentConfig():
     SECRET_KEY = '1234'
     UPLOADED_IMAGES_DEST = 'static/uploads/images'
     UPLOADED_FILES_DEST = 'static/uploads/files'
+    
+# Configuración de Impresora Térmica (Windows Print Spooler)
+    PRINTER_NAME = 'EPSON TM-T88V Receipt5'  # Nombre exacto de la impresora en Windows
 
 
 config = {
