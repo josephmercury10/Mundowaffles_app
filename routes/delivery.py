@@ -213,7 +213,7 @@ def finalizar_pedido():
         
         # Crear venta
         venta = Venta(
-            fecha_hora=db.func.current_timestamp(),
+            fecha_hora=datetime.now(),
             impuesto=0.19,
             numero_comprobante=f"V-{datetime.now().strftime('%Y%m%d%H%M%S')}",
             total=sum(item['precio'] * item['cantidad'] for item in carrito.values()),
@@ -242,6 +242,18 @@ def finalizar_pedido():
             db.session.add(producto_venta)
         
         db.session.commit()
+        
+        # ====== IMPRIMIR COMANDA PARA COCINA ======
+        try:
+            from flask import current_app
+            printer = get_printer(current_app)
+            # Convertir carrito a lista para la impresora
+            items_para_imprimir = list(carrito.values())
+            printer.imprimir_comanda_cocina(venta, items_para_imprimir, "DELIVERY")
+        except Exception as e:
+            # Si falla la impresión, no afecta el pedido
+            print(f"Error al imprimir comanda delivery: {str(e)}")
+        # ==========================================
         
         # Limpiar sesión
         session.pop('carrito', None)

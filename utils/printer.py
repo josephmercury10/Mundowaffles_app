@@ -149,6 +149,97 @@ class ThermalPrinter:
         
         return "\n".join(lineas)
     
+    def imprimir_comanda_cocina(self, pedido, items, tipo_pedido="MOSTRADOR"):
+        """
+        Imprime una comanda para cocina con los productos a preparar
+        Esta comanda se imprime automáticamente al crear un nuevo pedido
+        
+        Args:
+            pedido: Objeto Venta con la información del pedido
+            items: Lista de items del carrito (dict) o ProductoVenta
+            tipo_pedido: "MOSTRADOR" o "DELIVERY"
+        """
+        if not self.printer:
+            logger.error("Impresora no disponible para comanda")
+            return False
+        
+        try:
+            contenido = self._generar_comanda_cocina(pedido, items, tipo_pedido)
+            
+            hprinter = win32print.OpenPrinter(self.printer)
+            
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Comanda Cocina", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                contenido_bytes = contenido.encode('utf-8', errors='replace')
+                win32print.WritePrinter(hprinter, contenido_bytes)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+                
+                logger.info(f"Comanda cocina pedido #{pedido.id} impresa exitosamente")
+                return True
+                
+            finally:
+                win32print.ClosePrinter(hprinter)
+                
+        except Exception as e:
+            logger.error(f"Error al imprimir comanda: {str(e)}")
+            return False
+    
+    def _generar_comanda_cocina(self, pedido, items, tipo_pedido):
+        """Genera el contenido de la comanda para cocina"""
+        
+        lineas = []
+        ancho = 42
+        
+        # Encabezado grande y claro
+        lineas.append("")
+        lineas.append(self._centrar("*" * ancho, ancho))
+        lineas.append(self._centrar("*** COMANDA COCINA ***", ancho))
+        lineas.append(self._centrar("*" * ancho, ancho))
+        lineas.append("")
+        
+        # Tipo de pedido (muy visible)
+        lineas.append(self._centrar(f">>> {tipo_pedido} <<<", ancho))
+        lineas.append("")
+        
+        # Información del pedido
+        lineas.append(f"PEDIDO #: {pedido.id}")
+        lineas.append(f"FECHA: {pedido.fecha_hora.strftime('%d/%m/%Y')}")
+        lineas.append(f"HORA:  {pedido.fecha_hora.strftime('%H:%M:%S')}")
+        lineas.append("")
+        
+        lineas.append("=" * ancho)
+        lineas.append(self._centrar("PRODUCTOS A PREPARAR", ancho))
+        lineas.append("=" * ancho)
+        lineas.append("")
+        
+        # Items a preparar (formato grande y claro)
+        for item in items:
+            # Soporta tanto dict (del carrito) como ProductoVenta
+            if isinstance(item, dict):
+                cantidad = item['cantidad']
+                nombre = item['nombre']
+            else:
+                cantidad = item.cantidad
+                nombre = item.producto.nombre if hasattr(item, 'producto') else str(item)
+            
+            # Formato: cantidad grande + nombre
+            lineas.append(f"  [ {cantidad} ]  {nombre.upper()[:32]}")
+            lineas.append("")
+        
+        lineas.append("=" * ancho)
+        lineas.append("")
+        lineas.append("")
+        
+        # Línea de corte
+        lineas.append(self._centrar("- - - - - - - - - - - -", ancho))
+        lineas.append("")
+        lineas.append("")
+        lineas.append("")
+        
+        return "\n".join(lineas)
+    
     def imprimir_pedido_mostrador(self, pedido, items):
         """
         Imprime el detalle de un pedido de mostrador

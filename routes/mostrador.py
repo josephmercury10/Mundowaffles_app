@@ -149,7 +149,7 @@ def guardar_pedido():
         
         # Crear la venta
         venta = Venta(
-            fecha_hora=db.func.current_timestamp(),
+            fecha_hora=datetime.now(),
             total=total,
             impuesto=0.19,
             numero_comprobante=f"V-{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -174,6 +174,18 @@ def guardar_pedido():
             db.session.add(producto_venta)
         
         db.session.commit()
+        
+        # ====== IMPRIMIR COMANDA PARA COCINA ======
+        try:
+            from flask import current_app
+            printer = get_printer(current_app)
+            # Convertir carrito a lista para la impresora
+            items_para_imprimir = list(carrito.values())
+            printer.imprimir_comanda_cocina(venta, items_para_imprimir, "MOSTRADOR")
+        except Exception as e:
+            # Si falla la impresión, no afecta el pedido
+            print(f"Error al imprimir comanda: {str(e)}")
+        # ==========================================
         
         # Limpiar sesión
         session.pop('carrito_mostrador', None)
