@@ -2,8 +2,14 @@
 <tr hx-get="/delivery/detalle_pedido/{{ venta.id }}" 
     hx-target="#right_panel" 
     hx-swap="innerHTML" 
-    style="cursor:pointer">
-    <td>{{ venta.id }}</td>
+    style="cursor:pointer"
+    class="{{ 'table-success' if venta.comprobante_id else '' }}">
+    <td>
+        {{ venta.id }}
+        {% if venta.comprobante_id %}
+            <span class="badge bg-success" title="Pagado">💰</span>
+        {% endif %}
+    </td>
     <td>{{ venta.fecha_hora.strftime('%H:%M') if venta.fecha_hora }}</td>
     <td>{% if venta.cliente and venta.cliente.persona %}
             {{ venta.cliente.persona.direccion or venta.cliente.persona.direccion }}
@@ -25,25 +31,31 @@
         {% endif %}
     </td>
     <td>{{ venta.repartidor.persona.razon_social if venta.repartidor else 'Sin repartidor' }}</td>
-    <td>{{ venta.fecha_hora|timeago }}</td> <!-- Nueva columna con tiempo transcurrido -->
+    <td>{{ venta.fecha_hora|timeago }}</td>
     <td>${{ venta.total|format_price }}</td>
     <td>
         {% if venta.estado_delivery == 1 %}
-            <button class="btn btn-sm btn-warning"
-                    hx-post="/delivery/cambiar_estado/{{ venta.id }}/2"
-                    hx-trigger="click"
-                    onclick="event.stopPropagation()">
-                Enviar
-            </button>
+            {% if venta.comprobante_id %}
+                <!-- Ya pagó, puede enviar -->
+                <button class="btn btn-sm btn-warning"
+                        hx-post="/delivery/cambiar_estado/{{ venta.id }}/2"
+                        hx-trigger="click"
+                        onclick="event.stopPropagation()">
+                    🚚 Enviar
+                </button>
+            {% else %}
+                <!-- No ha pagado -->
+                <span class="badge bg-warning text-dark">⏳ Sin pagar</span>
+            {% endif %}
         {% elif venta.estado_delivery == 2 %}
             <button class="btn btn-sm btn-success"
                     hx-post="/delivery/cambiar_estado/{{ venta.id }}/3"
                     hx-trigger="click"
                     onclick="event.stopPropagation()">
-                Entregar
+                ✅ Entregar
             </button>
         {% elif venta.estado_delivery == 3 %}
-            <span class="badge bg-success">Entregado</span>
+            <span class="badge bg-success">✅ Entregado</span>
         {% else %}
             <span class="badge bg-secondary">{{ venta.estado_delivery }}</span>
         {% endif %}

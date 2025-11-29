@@ -343,6 +343,16 @@ def cambiar_estado(pedido_id, nuevo_estado):
         if not pedido:
             return jsonify({'error': 'Pedido no encontrado'}), 404
 
+        # Validar que no puede pasar a Enviado (2) sin haber pagado
+        if nuevo_estado == 2 and pedido.comprobante_id is None:
+            # Retornar error - debe pagar primero
+            response = make_response(
+                render_template('ventas/delivery/_partials/estado_pedido.html', 
+                               pedido=pedido, 
+                               error_pago='Debe cobrar el pedido antes de enviarlo')
+            )
+            return response
+
         estado_anterior = pedido.estado_delivery
 
         # Actualizar el estado
@@ -376,6 +386,58 @@ def cambiar_estado(pedido_id, nuevo_estado):
         
         return response
 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@delivery_bp.route('/cobrar_pedido/<int:pedido_id>', methods=['POST'])
+def cobrar_pedido(pedido_id):
+    """Cobra el pedido de delivery y lo marca como pagado"""
+    try:
+        pedido = Venta.query.get_or_404(pedido_id)
+        productos = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        cliente = Cliente.query.get(pedido.cliente_id) if pedido.cliente_id else None
+        
+        # Obtener tipo de comprobante del formulario
+        tipo_comprobante_id = request.form.get('tipo_comprobante_delivery', 1)
+        metodo_pago = request.form.get(f'metodo_pago_{pedido_id}', 'efectivo')
+        
+        # Actualizar pedido - NO cambiar estado_delivery, solo marcar como pagado
+        pedido.comprobante_id = int(tipo_comprobante_id)
+        
+        # Generar número de comprobante
+        from src.models.Comprobante_model import Comprobante
+        comprobante = Comprobante.query.get(tipo_comprobante_id)
+        tipo_prefijo = "B" if str(tipo_comprobante_id) == "1" else "F"
+        pedido.numero_comprobante = f"{tipo_prefijo}-{pedido.id:06d}"
+        
+        db.session.commit()
+        
+        # Imprimir recibo de venta
+        try:
+            from flask import current_app
+            printer = get_printer(current_app)
+            total_con_envio = float(pedido.total) + float(pedido.costo_envio or 0)
+            printer.imprimir_pedido(pedido, cliente, productos, total_con_envio)
+        except Exception as e:
+            print(f"Error al imprimir recibo delivery: {str(e)}")
+        
+        # Retornar el partial de estado actualizado (no vista de pago confirmado)
+        costo_envio = pedido.costo_envio if pedido.costo_envio else 0
+        total_con_envio = float(pedido.total) + float(costo_envio)
+        
+        response = make_response(
+            render_template('ventas/delivery/_partials/estado_pedido.html',
+                          pedido=pedido,
+                          pago_exitoso=True,
+                          comprobante=comprobante)
+        )
+        # Refrescar tabla de pendientes ya que el pedido sigue ahí pero ahora está pagado
+        response.headers['HX-Trigger'] = 'refresh-pendientes'
+        
+        return response
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

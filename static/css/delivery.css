@@ -13,6 +13,14 @@
   width: 500px;
   background: whitesmoke;
   border-left: 1px solid #e0e0e0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#right_panel {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .section-tabs {
@@ -92,6 +100,30 @@
 
 .section-header.enviados .section-count {
   background: #f4c430;
+}
+
+.section-header.entregados {
+  color: #28a745;
+}
+
+.section-header.entregados .section-count {
+  background: #28a745;
+}
+
+.section-header.pagados {
+  color: #17a2b8;
+}
+
+.section-header.pagados .section-count {
+  background: #17a2b8;
+}
+
+.section-header.pendientes {
+  color: #dc3545;
+}
+
+.section-header.pendientes .section-count {
+  background: #dc3545;
 }
 
 .orders-table {

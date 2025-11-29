@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, redirect, url_for
 from flask_mysqldb import MySQL
 #from flask_sqlalchemy import SQLAlchemy
 from config import config
@@ -43,6 +43,11 @@ app.register_blueprint(ventas_bp)
 app.register_blueprint(pruebas_bp)
 app.register_blueprint(delivery_bp)
 app.register_blueprint(mostrador_bp)
+
+# Ruta raíz - redirige a mostrador
+@app.route('/')
+def index():
+    return redirect(url_for('mostrador.index'))
 
 #def pagina_no_encontrada(error):
  #   return "<h1>Página no encontrada</h1><p>Lo sentimos, la página que buscas no existe.</p>"
