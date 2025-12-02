@@ -43,8 +43,9 @@
                             <th>Cliente</th>
                             <th>Items</th>
                             <th>Tiempo</th>
+                            <th>Estado de pago</th>
                             <th>Total</th>
-                            <th></th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="preparacion-table-body">
@@ -53,10 +54,10 @@
                 </table>
             </div>
 
-            <!-- Tabla de Pedidos Listos (Pendientes de Pago) -->
+            <!-- Tabla de Pedidos Listos -->
             <div class="delivery-section">
                 <div class="section-header enviados">
-                    <h3>Listos - Pendientes de Pago</h3>
+                    <h3>Listos</h3>
                 </div>
                 <table id="listos-table" class="table table-hover" 
                        hx-get="/mostrador/pedidos_estado/2" 
@@ -70,8 +71,9 @@
                             <th>Cliente</th>
                             <th>Items</th>
                             <th>Tiempo</th>
+                            <th>Estado de pago</th>
                             <th>Total</th>
-                            <th></th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="listos-table-body">

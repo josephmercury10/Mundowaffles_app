@@ -1,4 +1,5 @@
 <div class="estado-actions">
+    {% set pagado = pedido.comprobante_id is not none %}
     {% if pedido.estado_mostrador == 1 %}
         <div class="estado-progress">
             <div class="progress-step active">
@@ -19,26 +20,26 @@
                 </div>
                 <span class="step-label">Listo</span>
             </div>
-            <div class="progress-line"></div>
-            <div class="progress-step">
-                <div class="step-circle">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                        <line x1="1" y1="10" x2="23" y2="10"></line>
-                    </svg>
-                </div>
-                <span class="step-label">Pagado</span>
-            </div>
         </div>
-        <button class="btn btn-success btn-lg w-100 mt-4"
-                hx-post="/mostrador/cambiar_estado/{{ pedido.id }}/2"
-                hx-target="#estado-pedido-container"
-                hx-swap="innerHTML">
-            <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: white; fill: none; stroke-width: 2;">
-                <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Marcar como Listo
-        </button>
+        <div class="d-grid gap-2 mt-4">
+            {% if not pagado %}
+            <button class="btn btn-primary btn-lg"
+                    type="button"
+                    onclick="mostrarModalCobro({{ pedido.id }}, {{ pedido.total|float }})">
+                💰 Cobrar
+            </button>
+            {% endif %}
+            <button class="btn btn-success btn-lg"
+                    hx-post="/mostrador/cambiar_estado/{{ pedido.id }}/2"
+                    hx-target="#estado-pedido-container"
+                    hx-swap="innerHTML"
+                    {% if not pagado %}disabled title="Debe estar pagado"{% endif %}>
+                <svg class="icon icon-sm" viewBox="0 0 24 24" style="stroke: white; fill: none; stroke-width: 2;">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Marcar como Listo
+            </button>
+        </div>
     {% elif pedido.estado_mostrador == 2 %}
         <div class="estado-progress">
             <div class="progress-step completed">
@@ -58,66 +59,23 @@
                 </div>
                 <span class="step-label">Listo</span>
             </div>
-            <div class="progress-line"></div>
-            <div class="progress-step">
-                <div class="step-circle">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                        <line x1="1" y1="10" x2="23" y2="10"></line>
-                    </svg>
-                </div>
-                <span class="step-label">Pagado</span>
-            </div>
         </div>
         
-        <!-- Panel de Cobro -->
-        <div class="card mt-4" style="border: 2px solid #28a745;">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <svg class="icon icon-sm me-2" viewBox="0 0 24 24" style="stroke: white; fill: none; stroke-width: 2;">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                        <line x1="1" y1="10" x2="23" y2="10"></line>
-                    </svg>
-                    Cobrar Pedido
-                </h5>
+        <div class="d-grid gap-2 mt-4">
+            {% if not pagado %}
+            <button class="btn btn-primary btn-lg"
+                    type="button"
+                    onclick="mostrarModalCobro({{ pedido.id }}, {{ pedido.total|float }})">
+                💰 Cobrar
+            </button>
+            {% else %}
+            <div class="alert alert-success mb-0 text-center">
+                <strong>Pagado</strong>
+                {% if pedido.comprobante %}
+                    <br><small>{{ pedido.comprobante.tipo_comprobante }} - {{ pedido.numero_comprobante }}</small>
+                {% endif %}
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Total a Cobrar:</label>
-                    <div class="display-6 text-primary fw-bold">${{ pedido.total|format_price }}</div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Tipo de Comprobante:</label>
-                    <div class="d-flex gap-3">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="tipo_comprobante" 
-                                   id="boleta_{{ pedido.id }}" value="1" checked>
-                            <label class="form-check-label" for="boleta_{{ pedido.id }}">
-                                🧾 Boleta
-                            </label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="tipo_comprobante" 
-                                   id="factura_{{ pedido.id }}" value="2">
-                            <label class="form-check-label" for="factura_{{ pedido.id }}">
-                                📄 Factura
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="btn btn-success btn-lg w-100"
-                        hx-post="/mostrador/cobrar_pedido/{{ pedido.id }}"
-                        hx-include="[name='tipo_comprobante']"
-                        hx-target="#right_panel"
-                        hx-swap="innerHTML">
-                    <svg class="icon icon-sm me-2" viewBox="0 0 24 24" style="stroke: white; fill: none; stroke-width: 2;">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Confirmar Pago
-                </button>
-            </div>
+            {% endif %}
         </div>
     {% elif pedido.estado_mostrador == 3 %}
         <div class="estado-progress">
@@ -137,15 +95,6 @@
                     </svg>
                 </div>
                 <span class="step-label">Listo</span>
-            </div>
-            <div class="progress-line completed"></div>
-            <div class="progress-step completed">
-                <div class="step-circle">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                </div>
-                <span class="step-label">Pagado</span>
             </div>
         </div>
         <div class="alert alert-success mt-4 text-center">

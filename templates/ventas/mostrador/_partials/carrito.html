@@ -4,8 +4,8 @@
 
 <div class="container w-100 mt-3">
     <div class="row">
-        <!-- Panel izquierdo: Productos -->
-        <div class="col-md-7">
+        <!-- Panel superior: Productos -->
+        <div class="col-12 mb-3">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Productos Disponibles</h5>
@@ -14,10 +14,10 @@
                            class="form-control form-control-sm mt-2" 
                            placeholder="🔍 Buscar producto...">
                 </div>
-                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                <div class="card-body" style="max-height: 380px; overflow-y: auto;">
                     <div class="row" id="productos-grid">
                         {% for producto in productos %}
-                        <div class="col-6 col-lg-4 mb-2 producto-item" data-nombre="{{ producto.nombre|lower }}">
+                        <div class="col-6 col-lg-3 mb-2 producto-item" data-nombre="{{ producto.nombre|lower }}">
                             <div class="card product-card h-100" style="cursor: pointer;"
                                  hx-post="/mostrador/agregar_producto"
                                  hx-vals='{"producto_id": "{{ producto.id }}", "nombre": "{{ producto.nombre }}", "precio": "{{ producto.precio }}"}'
@@ -26,10 +26,10 @@
                                 {% if producto.img_path %}
                                 <img src="{{ url_for('static', filename='uploads/images/' + producto.img_path) }}" 
                                      class="card-img-top" alt="{{ producto.nombre }}"
-                                     style="object-fit: cover; height: 80px;">
+                                     style="object-fit: cover; height: 70px;">
                                 {% else %}
                                 <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
-                                     style="height: 80px;">
+                                     style="height: 70px;">
                                     <span class="text-muted small">🍽️</span>
                                 </div>
                                 {% endif %}
@@ -44,9 +44,8 @@
                 </div>
             </div>
         </div>
-
-        <!-- Panel derecho: Carrito -->
-        <div class="col-md-5">
+        <!-- Panel inferior: Carrito -->
+        <div class="col-12">
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">🛒 Carrito</h5>

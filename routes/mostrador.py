@@ -213,10 +213,17 @@ def pedidos_estado(estado):
     try:
         # Filtrar las ventas de mostrador según el estado
         # tipoventa_id=1 para mostrador
-        ventas = Venta.query.filter(
-            Venta.estado_mostrador == estado,
-            Venta.tipoventa_id == 1
-        ).order_by(Venta.fecha_hora.desc()).all()
+        if estado == 3:
+            # "Pagados" ahora es estado de pago independiente del estado_mostrador
+            ventas = Venta.query.filter(
+                Venta.tipoventa_id == 1,
+                Venta.comprobante_id.isnot(None)
+            ).order_by(Venta.fecha_hora.desc()).all()
+        else:
+            ventas = Venta.query.filter(
+                Venta.estado_mostrador == estado,
+                Venta.tipoventa_id == 1
+            ).order_by(Venta.fecha_hora.desc()).all()
 
         return render_template('ventas/mostrador/_partials/pedidos.html', ventas=ventas)
     except Exception as e:
@@ -241,13 +248,17 @@ def detalle_pedido(pedido_id):
 def cambiar_estado(pedido_id, nuevo_estado):
     """Cambia el estado de un pedido de mostrador"""
     try:
-        # Validar que el estado sea válido (1=Preparación, 2=Listo, 3=Pagado)
-        if nuevo_estado not in [1, 2, 3]:
+        # Validar que el estado sea válido (1=Preparación, 2=Listo)
+        if nuevo_estado not in [1, 2]:
             return jsonify({'error': 'Estado no válido'}), 400
 
         pedido = Venta.query.get(pedido_id)
         if not pedido:
             return jsonify({'error': 'Pedido no encontrado'}), 404
+
+        # Reglas de negocio: para pasar a "Listo" debe estar pagado
+        if nuevo_estado == 2 and not pedido.comprobante_id:
+            return jsonify({'error': 'Debe estar pagado antes de marcar como Listo'}), 400
 
         estado_anterior = pedido.estado_mostrador
 
@@ -272,8 +283,7 @@ def cambiar_estado(pedido_id, nuevo_estado):
             triggers.append('refresh-preparacion')
         if estado_anterior == 2 or nuevo_estado == 2:
             triggers.append('refresh-listos')
-        if estado_anterior == 3 or nuevo_estado == 3:
-            triggers.append('refresh-pagados')
+        # El estado "pagado" ahora es independiente del estado_mostrador
         
         if triggers:
             response.headers['HX-Trigger'] = ', '.join(triggers)
@@ -295,8 +305,7 @@ def cobrar_pedido(pedido_id):
         # Obtener tipo de comprobante del formulario
         tipo_comprobante_id = request.form.get('tipo_comprobante', 1)
         
-        # Actualizar pedido
-        pedido.estado_mostrador = 3  # Pagado
+        # Actualizar pago (independiente del estado_mostrador)
         pedido.comprobante_id = int(tipo_comprobante_id)
         
         # Generar número de comprobante
@@ -315,14 +324,11 @@ def cobrar_pedido(pedido_id):
         except Exception as e:
             print(f"Error al imprimir recibo: {str(e)}")
         
-        # Retornar vista de pago confirmado
+        # Retornar actualización del estado y refrescar tablas
         response = make_response(
-            render_template('ventas/mostrador/_partials/pago_confirmado.html',
-                          pedido=pedido,
-                          items=items,
-                          comprobante=comprobante)
+            render_template('ventas/mostrador/_partials/estado_pedido.html', pedido=pedido)
         )
-        response.headers['HX-Trigger'] = 'refresh-listos, refresh-pagados'
+        response.headers['HX-Trigger'] = 'refresh-preparacion, refresh-listos, refresh-pagados'
         
         return response
         

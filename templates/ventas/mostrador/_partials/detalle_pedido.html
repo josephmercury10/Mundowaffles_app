@@ -2,7 +2,6 @@
 
 <div class="container">
     <div class="max-width space-y-6">
-        
         <!-- Order Header -->
         <div class="card card-shadow-order">
             <div class="order-header">
@@ -91,9 +90,14 @@
                                 {% if pedido.estado_mostrador == 1 %}
                                     <span class="badge bg-warning text-dark">En Preparación</span>
                                 {% elif pedido.estado_mostrador == 2 %}
-                                    <span class="badge bg-info">Listo - Pendiente de Pago</span>
-                                {% elif pedido.estado_mostrador == 3 %}
-                                    <span class="badge bg-success">Pagado</span>
+                                    <span class="badge bg-info">Listo</span>
+                                {% endif %}
+                            </p>
+                            <p>
+                                {% if pedido.comprobante_id is none %}
+                                    <span class="badge bg-secondary">Pendiente de cobro</span>
+                                {% else %}
+                                    <span class="badge bg-success">Pagado </span>
                                 {% endif %}
                             </p>
                         </div>
@@ -167,6 +171,22 @@
                         <span class="summary-label">Total:</span>
                         <span class="summary-value">${{ pedido.total|format_price }}</span>
                     </div>
+                    
+                    <div class="separator"></div>
+                    
+                    <div class="summary-row">
+                        <span class="summary-label">Estado de Pago:</span>
+                        <span class="summary-value">
+                            {% if pedido.comprobante_id %}
+                                <span class="badge bg-success">✓ Pagado</span>
+                                {% if pedido.comprobante %}
+                                    <small class="text-muted ms-2">{{ pedido.comprobante.tipo_comprobante }} - {{ pedido.numero_comprobante }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pendiente de cobro</span>
+                            {% endif %}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -189,4 +209,154 @@
         </div>
 
     </div>
+
+<!-- Modal de Pago - FUERA del container para que funcione con Bootstrap -->
+{% if not pedido.comprobante_id %}
+<div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalCobroLabel">
+                    💳 Cobrar Pedido #{{ pedido.id }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Resumen del pedido -->
+                <div class="card mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="card-body text-center py-4">
+                        <h6 class="text-uppercase mb-2" style="opacity: 0.8;">Total a Cobrar</h6>
+                        <h2 class="display-4 fw-bold mb-0">
+                            ${{ pedido.total|format_price }}
+                        </h2>
+                    </div>
+                </div>
+
+                <!-- Tipo de Comprobante -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">📄 Tipo de Comprobante</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="tipo_comprobante" id="boleta_most" value="1" checked>
+                        <label class="btn btn-outline-primary" for="boleta_most">
+                            🧾 Boleta
+                        </label>
+                        <input type="radio" class="btn-check" name="tipo_comprobante" id="factura_most" value="2">
+                        <label class="btn btn-outline-primary" for="factura_most">
+                            📋 Factura
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Método de Pago -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">💳 Método de Pago</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="metodo_pago" id="efectivo_pago" value="efectivo" checked onchange="toggleSeccionEfectivo(true)">
+                        <label class="btn btn-outline-success" for="efectivo_pago">
+                            💵 Efectivo
+                        </label>
+                        <input type="radio" class="btn-check" name="metodo_pago" id="tarjeta_pago" value="tarjeta" onchange="toggleSeccionEfectivo(false)">
+                        <label class="btn btn-outline-info" for="tarjeta_pago">
+                            💳 Tarjeta
+                        </label>
+                        <input type="radio" class="btn-check" name="metodo_pago" id="transfer_pago" value="transferencia" onchange="toggleSeccionEfectivo(false)">
+                        <label class="btn btn-outline-warning" for="transfer_pago">
+                            📱 Transfer
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Calculadora de Vuelto -->
+                <div id="seccionEfectivoModal" class="card bg-light">
+                    <div class="card-body">
+                        <label class="form-label fw-bold">💵 Monto Recibido</label>
+                        <div class="input-group input-group-lg mb-3">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control text-end fs-4" id="montoRecibidoInput" 
+                                   placeholder="0" min="0" step="100"
+                                   oninput="calcularVueltoModal({{ pedido.total|float }})">
+                        </div>
+                        
+                        <div class="d-flex gap-2 mb-3 flex-wrap">
+                            {% set total_pedido = pedido.total|float %}
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMontoModal({{ total_pedido|round|int }}, {{ total_pedido }})">Exacto</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMontoModal(5000, {{ total_pedido }})">$5.000</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMontoModal(10000, {{ total_pedido }})">$10.000</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMontoModal(20000, {{ total_pedido }})">$20.000</button>
+                        </div>
+                        
+                        <div class="text-center p-3 rounded" id="vueltoContainerModal" style="background: #e8f5e9; display: none;">
+                            <span class="text-muted">Vuelto a entregar:</span>
+                            <h3 class="text-success fw-bold mb-0" id="vueltoCalculadoModal">$0</h3>
+                        </div>
+                        <div class="text-center p-3 rounded" id="faltaContainerModal" style="background: #ffebee; display: none;">
+                            <span class="text-muted">Falta:</span>
+                            <h3 class="text-danger fw-bold mb-0" id="montoFaltanteModal">$0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success btn-lg" id="btnConfirmarPago"
+                        hx-post="/mostrador/cobrar_pedido/{{ pedido.id }}"
+                        hx-include="[name='tipo_comprobante'], [name='metodo_pago']"
+                        hx-target="#estado-pedido-container"
+                        hx-swap="innerHTML"
+                        onclick="cerrarModalCobro()">
+                    ✓ Confirmar Pago
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function mostrarModalCobro(pedidoId, total) {
+        var modalEl = document.getElementById('modalCobro');
+        if (modalEl) {
+            var modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    }
+    
+    function cerrarModalCobro() {
+        var modalEl = document.getElementById('modalCobro');
+        var modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+    
+    function toggleSeccionEfectivo(show) {
+        document.getElementById('seccionEfectivoModal').style.display = show ? 'block' : 'none';
+    }
+    
+    function setMontoModal(monto, total) {
+        document.getElementById('montoRecibidoInput').value = monto;
+        calcularVueltoModal(total);
+    }
+    
+    function calcularVueltoModal(total) {
+        const montoRecibido = parseFloat(document.getElementById('montoRecibidoInput').value) || 0;
+        const vuelto = montoRecibido - total;
+        
+        const vueltoContainer = document.getElementById('vueltoContainerModal');
+        const faltaContainer = document.getElementById('faltaContainerModal');
+        const vueltoEl = document.getElementById('vueltoCalculadoModal');
+        const faltaEl = document.getElementById('montoFaltanteModal');
+        
+        if (montoRecibido === 0) {
+            vueltoContainer.style.display = 'none';
+            faltaContainer.style.display = 'none';
+        } else if (vuelto >= 0) {
+            vueltoContainer.style.display = 'block';
+            faltaContainer.style.display = 'none';
+            vueltoEl.textContent = '$' + vuelto.toLocaleString('es-CL');
+        } else {
+            vueltoContainer.style.display = 'none';
+            faltaContainer.style.display = 'block';
+            faltaEl.textContent = '$' + Math.abs(vuelto).toLocaleString('es-CL');
+        }
+    }
+</script>
 </div>
