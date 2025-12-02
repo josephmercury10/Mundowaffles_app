@@ -1,25 +1,44 @@
 <div class="productos-grid">
+    <input type="text" class="form-control form-control-sm mb-2" 
+           id="buscar-producto-agregar" 
+           placeholder="🔍 Buscar producto..."
+           onkeyup="filtrarProductosAgregar(this.value)">
+    <div class="row" id="grid-productos-agregar">
     {% for producto in productos %}
-    <div class="producto-card">
-        <div class="producto-card-body">
-            <h4 class="producto-card-nombre">{{ producto.nombre }}</h4>
-            <p class="producto-card-precio">${{ producto.precio|format_price }}</p>
+    <div class="col-6 col-lg-4 mb-2 producto-agregar-item" data-nombre="{{ producto.nombre|lower }}">
+        <div class="card h-100" style="cursor:pointer;"
+             hx-post="/delivery/pedido/{{ pedido_id }}/carrito_temp/agregar"
+             hx-vals='{"producto_id": "{{ producto.id }}", "nombre": "{{ producto.nombre }}", "precio": "{{ producto.precio }}"}'
+             hx-target="#items-container"
+             hx-swap="innerHTML">
+            {% if producto.img_path %}
+            <img src="{{ url_for('static', filename='uploads/images/' + producto.img_path) }}" 
+                 class="card-img-top" style="height:60px;object-fit:cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height:60px;">
+                <span class="text-muted">🍽️</span>
+            </div>
+            {% endif %}
+            <div class="card-body p-2 text-center">
+                <small class="d-block">{{ producto.nombre[:18] }}</small>
+                <span class="text-primary fw-bold small">${{ producto.precio|format_price }}</span>
+            </div>
         </div>
-        <button class="btn-agregar-producto"
-                hx-post="/delivery/pedido/{{ pedido_id }}/agregar_producto"
-                hx-vals='{"producto_id": "{{ producto.id }}"}'
-                hx-target="#items-container"
-                hx-swap="innerHTML">
-            <svg class="icon-sm" viewBox="0 0 24 24">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Agregar
-        </button>
     </div>
     {% else %}
-    <div class="no-productos">
+    <div class="col-12 text-center text-muted py-3">
         <p>No hay productos disponibles</p>
     </div>
     {% endfor %}
+    </div>
 </div>
+
+<script>
+function filtrarProductosAgregar(texto) {
+    const filtro = texto.toLowerCase();
+    document.querySelectorAll('.producto-agregar-item').forEach(item => {
+        const nombre = item.dataset.nombre;
+        item.style.display = nombre.includes(filtro) ? '' : 'none';
+    });
+}
+</script>

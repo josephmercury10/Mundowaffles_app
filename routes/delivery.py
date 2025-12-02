@@ -528,10 +528,19 @@ def _render_items_pedido(pedido_id):
     costo_envio = pedido.costo_envio if pedido.costo_envio else 0
     total_con_envio = float(pedido.total) + float(costo_envio)
     
+    # Obtener carrito temporal y items pendientes de eliminar de la sesión
+    carrito_temporal = session.get(f'carrito_temp_{pedido_id}', {})
+    items_pendientes_eliminar = session.get(f'eliminar_{pedido_id}', [])
+    
+    # Convertir carrito temporal a lista
+    carrito_lista = list(carrito_temporal.values()) if carrito_temporal else []
+    
     return render_template('ventas/delivery/_partials/items_pedido.html',
                           pedido=pedido,
                           productos=productos,
-                          total_con_envio=total_con_envio)
+                          total_con_envio=total_con_envio,
+                          carrito_temporal=carrito_lista,
+                          items_pendientes_eliminar=items_pendientes_eliminar)
     
     
 @delivery_bp.route('/pedido/<int:pedido_id>/productos_disponibles', methods=['GET'])
@@ -602,7 +611,228 @@ def agregar_producto_pedido(pedido_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+# ==================== CARRITO TEMPORAL PARA AGREGAR PRODUCTOS ====================
+
+@delivery_bp.route('/pedido/<int:pedido_id>/carrito_temp/agregar', methods=['POST'])
+def carrito_temp_agregar(pedido_id):
+    """Agrega un producto al carrito temporal (sin guardar en BD)"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido or pedido.estado_delivery != 1:
+            return jsonify({'error': 'Pedido no válido'}), 403
+        
+        producto_id = request.form.get('producto_id')
+        nombre = request.form.get('nombre')
+        precio = float(request.form.get('precio', 0))
+        
+        # Obtener carrito temporal de la sesión
+        carrito_key = f'carrito_temp_{pedido_id}'
+        carrito = session.get(carrito_key, {})
+        
+        if producto_id in carrito:
+            carrito[producto_id]['cantidad'] += 1
+        else:
+            carrito[producto_id] = {
+                'id': producto_id,
+                'nombre': nombre,
+                'precio': precio,
+                'cantidad': 1
+            }
+        
+        session[carrito_key] = carrito
+        
+        return _render_items_pedido(pedido_id)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/carrito_temp/aumentar/<producto_id>', methods=['POST'])
+def carrito_temp_aumentar(pedido_id, producto_id):
+    """Aumenta cantidad de un producto en el carrito temporal"""
+    carrito_key = f'carrito_temp_{pedido_id}'
+    carrito = session.get(carrito_key, {})
     
+    if producto_id in carrito:
+        carrito[producto_id]['cantidad'] += 1
+        session[carrito_key] = carrito
+    
+    return _render_items_pedido(pedido_id)
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/carrito_temp/disminuir/<producto_id>', methods=['POST'])
+def carrito_temp_disminuir(pedido_id, producto_id):
+    """Disminuye cantidad de un producto en el carrito temporal"""
+    carrito_key = f'carrito_temp_{pedido_id}'
+    carrito = session.get(carrito_key, {})
+    
+    if producto_id in carrito:
+        carrito[producto_id]['cantidad'] -= 1
+        if carrito[producto_id]['cantidad'] <= 0:
+            del carrito[producto_id]
+        session[carrito_key] = carrito
+    
+    return _render_items_pedido(pedido_id)
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/carrito_temp/eliminar/<producto_id>', methods=['POST'])
+def carrito_temp_eliminar(pedido_id, producto_id):
+    """Elimina un producto del carrito temporal"""
+    carrito_key = f'carrito_temp_{pedido_id}'
+    carrito = session.get(carrito_key, {})
+    
+    if producto_id in carrito:
+        del carrito[producto_id]
+        session[carrito_key] = carrito
+    
+    return _render_items_pedido(pedido_id)
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/confirmar_productos', methods=['POST'])
+def confirmar_productos(pedido_id):
+    """Confirma los productos del carrito temporal y los agrega al pedido"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido or pedido.estado_delivery != 1:
+            return jsonify({'error': 'Pedido no válido'}), 403
+        
+        carrito_key = f'carrito_temp_{pedido_id}'
+        carrito = session.get(carrito_key, {})
+        
+        if not carrito:
+            return _render_items_pedido(pedido_id)
+        
+        productos_agregados = []
+        
+        for item in carrito.values():
+            producto_id = int(item['id'])
+            
+            # Verificar si ya existe en el pedido
+            producto_existente = ProductoVenta.query.filter_by(
+                venta_id=pedido_id,
+                producto_id=producto_id
+            ).first()
+            
+            if producto_existente:
+                producto_existente.cantidad += item['cantidad']
+            else:
+                nuevo_producto = ProductoVenta(
+                    venta_id=pedido_id,
+                    producto_id=producto_id,
+                    cantidad=item['cantidad'],
+                    precio_venta=item['precio'],
+                    descuento=0
+                )
+                db.session.add(nuevo_producto)
+            
+            productos_agregados.append({
+                'nombre': item['nombre'],
+                'cantidad': item['cantidad']
+            })
+        
+        # Recalcular total
+        db.session.flush()
+        productos_pedido = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        pedido.total = sum(float(p.precio_venta) * p.cantidad for p in productos_pedido)
+        
+        db.session.commit()
+        
+        # Imprimir comanda con productos agregados
+        try:
+            from flask import current_app
+            printer = get_printer(current_app)
+            printer.imprimir_comanda_agregados(pedido, productos_agregados)
+        except Exception as e:
+            print(f"Error al imprimir comanda: {str(e)}")
+        
+        # Limpiar carrito temporal
+        session.pop(carrito_key, None)
+        
+        return _render_items_pedido(pedido_id)
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== ELIMINACIÓN CON CONFIRMACIÓN ====================
+
+@delivery_bp.route('/pedido/<int:pedido_id>/marcar_eliminar/<int:producto_id>', methods=['POST'])
+def marcar_eliminar(pedido_id, producto_id):
+    """Marca un producto para eliminar (sin eliminar aún)"""
+    eliminar_key = f'eliminar_{pedido_id}'
+    items_eliminar = session.get(eliminar_key, [])
+    
+    if producto_id not in items_eliminar:
+        items_eliminar.append(producto_id)
+        session[eliminar_key] = items_eliminar
+    
+    return _render_items_pedido(pedido_id)
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/desmarcar_eliminar/<int:producto_id>', methods=['POST'])
+def desmarcar_eliminar(pedido_id, producto_id):
+    """Desmarca un producto de la lista de eliminación"""
+    eliminar_key = f'eliminar_{pedido_id}'
+    items_eliminar = session.get(eliminar_key, [])
+    
+    if producto_id in items_eliminar:
+        items_eliminar.remove(producto_id)
+        session[eliminar_key] = items_eliminar
+    
+    return _render_items_pedido(pedido_id)
+
+
+@delivery_bp.route('/pedido/<int:pedido_id>/confirmar_eliminacion', methods=['POST'])
+def confirmar_eliminacion(pedido_id):
+    """Confirma la eliminación de los productos marcados"""
+    try:
+        pedido = Venta.query.get(pedido_id)
+        if not pedido or pedido.estado_delivery != 1:
+            return jsonify({'error': 'Pedido no válido'}), 403
+        
+        eliminar_key = f'eliminar_{pedido_id}'
+        items_eliminar = session.get(eliminar_key, [])
+        
+        if not items_eliminar:
+            return _render_items_pedido(pedido_id)
+        
+        productos_eliminados = []
+        
+        for producto_id in items_eliminar:
+            producto_venta = ProductoVenta.query.get(producto_id)
+            if producto_venta and producto_venta.venta_id == pedido_id:
+                productos_eliminados.append({
+                    'nombre': producto_venta.producto.nombre,
+                    'cantidad': producto_venta.cantidad
+                })
+                db.session.delete(producto_venta)
+        
+        # Recalcular total
+        db.session.flush()
+        productos_restantes = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+        pedido.total = sum(float(p.precio_venta) * p.cantidad for p in productos_restantes)
+        
+        db.session.commit()
+        
+        # Imprimir comanda de eliminación
+        try:
+            from flask import current_app
+            printer = get_printer(current_app)
+            printer.imprimir_comanda_eliminados(pedido, productos_eliminados)
+        except Exception as e:
+            print(f"Error al imprimir comanda eliminación: {str(e)}")
+        
+        # Limpiar lista de eliminación
+        session.pop(eliminar_key, None)
+        
+        return _render_items_pedido(pedido_id)
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
     
 
 @delivery_bp.route('/imprimir_pedido/<int:pedido_id>', methods=['POST'])

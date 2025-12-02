@@ -212,6 +212,18 @@
             box-shadow: var(--shadow-soft);
         }
 
+        /* Item marcado para eliminar */
+        .item-pendiente-eliminar {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            opacity: 0.8;
+        }
+        
+        .item-pendiente-eliminar .item-name {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
         .item-left {
             display: flex;
             align-items: center;

@@ -209,36 +209,19 @@ class ThermalPrinter:
             return False
     
     def _generar_comanda_cocina(self, pedido, items, tipo_pedido):
-        """Genera el contenido de la comanda para cocina"""
+        """Genera el contenido de la comanda para cocina - versión compacta"""
         
         lineas = []
         ancho = 42
         
-        # Encabezado grande y claro
+        # Encabezado mínimo
         lineas.append("")
-        lineas.append(self._centrar("*" * ancho, ancho))
-        lineas.append(self._centrar("*** COMANDA COCINA ***", ancho))
-        lineas.append(self._centrar("*" * ancho, ancho))
-        lineas.append("")
+        lineas.append(f"#%s   %s" % (pedido.id, tipo_pedido))
+        lineas.append(pedido.fecha_hora.strftime('%d/%m %H:%M'))
+        lineas.append("-" * ancho)
         
-        # Tipo de pedido (muy visible)
-        lineas.append(self._centrar(f">>> {tipo_pedido} <<<", ancho))
-        lineas.append("")
-        
-        # Información del pedido
-        lineas.append(f"PEDIDO #: {pedido.id}")
-        lineas.append(f"FECHA: {pedido.fecha_hora.strftime('%d/%m/%Y')}")
-        lineas.append(f"HORA:  {pedido.fecha_hora.strftime('%H:%M:%S')}")
-        lineas.append("")
-        
-        lineas.append("=" * ancho)
-        lineas.append(self._centrar("PRODUCTOS A PREPARAR", ancho))
-        lineas.append("=" * ancho)
-        lineas.append("")
-        
-        # Items a preparar (formato grande y claro)
+        # Productos con letra grande (doble altura simulada con espaciado)
         for item in items:
-            # Soporta tanto dict (del carrito) como ProductoVenta
             if isinstance(item, dict):
                 cantidad = item['cantidad']
                 nombre = item['nombre']
@@ -246,21 +229,89 @@ class ThermalPrinter:
                 cantidad = item.cantidad
                 nombre = item.producto.nombre if hasattr(item, 'producto') else str(item)
             
-            # Formato: cantidad grande + nombre
-            lineas.append(f"  [ {cantidad} ]  {nombre.upper()[:32]}")
-            lineas.append("")
+            # Formato compacto: cantidad x nombre
+            lineas.append(f"{cantidad}x {nombre.upper()}")
         
-        lineas.append("=" * ancho)
-        lineas.append("")
-        lineas.append("")
-        
-        # Línea de corte
-        lineas.append(self._centrar("- - - - - - - - - - - -", ancho))
-        lineas.append("")
-        lineas.append("")
+        lineas.append("-" * ancho)
         lineas.append("")
         
         return "\n".join(lineas)
+    
+    def imprimir_comanda_agregados(self, pedido, productos):
+        """Imprime comanda con productos AGREGADOS a un pedido existente"""
+        if not self.printer:
+            return False
+        
+        try:
+            lineas = []
+            ancho = 42
+            
+            lineas.append("")
+            lineas.append(f"#%s   AGREGADO" % pedido.id)
+            lineas.append("-" * ancho)
+            
+            for item in productos:
+                lineas.append(f"{item['cantidad']}x {item['nombre'].upper()}")
+            
+            lineas.append("-" * ancho)
+            lineas.append("")
+            
+            contenido = "\n".join(lineas)
+            
+            hprinter = win32print.OpenPrinter(self.printer)
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Comanda Agregados", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, contenido.encode('utf-8', errors='replace'))
+                win32print.WritePrinter(hprinter, FEED_LINES(3))
+                win32print.WritePrinter(hprinter, CUT_PAPER)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+                return True
+            finally:
+                win32print.ClosePrinter(hprinter)
+                
+        except Exception as e:
+            logger.error(f"Error imprimir comanda agregados: {str(e)}")
+            return False
+    
+    def imprimir_comanda_eliminados(self, pedido, productos):
+        """Imprime comanda con productos ELIMINADOS de un pedido"""
+        if not self.printer:
+            return False
+        
+        try:
+            lineas = []
+            ancho = 42
+            
+            lineas.append("")
+            lineas.append(f"#%s   ELIMINADO" % pedido.id)
+            lineas.append("-" * ancho)
+            
+            for item in productos:
+                lineas.append(f"{item['cantidad']}x {item['nombre'].upper()}")
+            
+            lineas.append("-" * ancho)
+            lineas.append("")
+            
+            contenido = "\n".join(lineas)
+            
+            hprinter = win32print.OpenPrinter(self.printer)
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Comanda Eliminados", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, contenido.encode('utf-8', errors='replace'))
+                win32print.WritePrinter(hprinter, FEED_LINES(3))
+                win32print.WritePrinter(hprinter, CUT_PAPER)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+                return True
+            finally:
+                win32print.ClosePrinter(hprinter)
+                
+        except Exception as e:
+            logger.error(f"Error imprimir comanda eliminados: {str(e)}")
+            return False
     
     def imprimir_pedido_mostrador(self, pedido, items):
         """
