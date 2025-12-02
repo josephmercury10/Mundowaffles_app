@@ -313,6 +313,101 @@ class ThermalPrinter:
             logger.error(f"Error imprimir comanda eliminados: {str(e)}")
             return False
     
+    def imprimir_comprobante_delivery(self, pedido, cliente, productos):
+        """
+        Imprime el comprobante de delivery para el repartidor
+        Se imprime al momento de enviar el pedido
+        """
+        if not self.printer:
+            logger.error("Impresora no disponible")
+            return False
+        
+        try:
+            contenido = self._generar_comprobante_delivery(pedido, cliente, productos)
+            
+            hprinter = win32print.OpenPrinter(self.printer)
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Comprobante Delivery", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, contenido.encode('utf-8', errors='replace'))
+                win32print.WritePrinter(hprinter, FEED_LINES(5))
+                win32print.WritePrinter(hprinter, CUT_PAPER)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+                logger.info(f"Comprobante delivery #{pedido.id} impreso")
+                return True
+            finally:
+                win32print.ClosePrinter(hprinter)
+                
+        except Exception as e:
+            logger.error(f"Error imprimir comprobante delivery: {str(e)}")
+            return False
+    
+    def _generar_comprobante_delivery(self, pedido, cliente, productos):
+        """Genera el contenido del comprobante de delivery"""
+        lineas = []
+        ancho = 42
+        
+        # Título
+        lineas.append("")
+        lineas.append(self._centrar("MUNDO WAFFLES", ancho))
+        lineas.append(self._centrar("=" * 20, ancho))
+        lineas.append("")
+        
+        # Número de pedido, fecha y hora
+        lineas.append(f"Pedido #: {pedido.id}")
+        lineas.append(f"Fecha: {pedido.fecha_hora.strftime('%d/%m/%Y')}")
+        lineas.append(f"Hora:  {pedido.fecha_hora.strftime('%H:%M')}")
+        lineas.append("")
+        
+        # Datos del cliente
+        lineas.append("-" * ancho)
+        lineas.append("DATOS DEL CLIENTE")
+        lineas.append("-" * ancho)
+        if cliente and cliente.persona:
+            lineas.append(f"Nombre: {cliente.persona.razon_social or 'Sin nombre'}")
+            lineas.append(f"Fono:   {cliente.persona.telefono or 'Sin telefono'}")
+            lineas.append(f"Dir:    {cliente.persona.direccion or 'Sin direccion'}")
+        else:
+            lineas.append("Cliente no registrado")
+        lineas.append("")
+        
+        # Detalle de productos
+        lineas.append("-" * ancho)
+        lineas.append("DETALLE DE PRODUCTOS")
+        lineas.append("-" * ancho)
+        
+        subtotal = 0
+        for item in productos:
+            nombre = item.producto.nombre if hasattr(item, 'producto') else str(item)
+            cantidad = item.cantidad
+            precio = float(item.precio_venta)
+            item_total = cantidad * precio
+            subtotal += item_total
+            
+            lineas.append(f"{cantidad}x {nombre[:25]}")
+            lineas.append(f"   ${precio:,.0f} c/u = ${item_total:,.0f}")
+        
+        lineas.append("")
+        lineas.append("-" * ancho)
+        
+        # Totales
+        costo_envio = float(pedido.costo_envio or 0)
+        total = subtotal + costo_envio
+        
+        lineas.append(f"{'Subtotal:':<30} ${subtotal:,.0f}")
+        lineas.append(f"{'Costo Envio:':<30} ${costo_envio:,.0f}")
+        lineas.append("-" * ancho)
+        lineas.append(f"{'TOTAL:':<30} ${total:,.0f}")
+        lineas.append("")
+        
+        # Mensaje final
+        lineas.append(self._centrar("Gracias por su preferencia!", ancho))
+        lineas.append("")
+        lineas.append("")
+        
+        return "\n".join(lineas)
+    
     def imprimir_pedido_mostrador(self, pedido, items):
         """
         Imprime el detalle de un pedido de mostrador

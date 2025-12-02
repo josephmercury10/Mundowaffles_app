@@ -364,6 +364,17 @@ def cambiar_estado(pedido_id, nuevo_estado):
         pedido.estado_delivery = nuevo_estado
         db.session.commit()
 
+        # Si se envía (estado 2), imprimir comprobante para el repartidor
+        if nuevo_estado == 2:
+            try:
+                from flask import current_app
+                cliente = Cliente.query.get(pedido.cliente_id) if pedido.cliente_id else None
+                productos = ProductoVenta.query.filter_by(venta_id=pedido_id).all()
+                printer = get_printer(current_app)
+                printer.imprimir_comprobante_delivery(pedido, cliente, productos)
+            except Exception as e:
+                print(f"Error al imprimir comprobante delivery: {str(e)}")
+
         # Detectar desde dónde se llamó
         hx_target = request.headers.get('HX-Target', '')
         
@@ -419,14 +430,7 @@ def cobrar_pedido(pedido_id):
         
         db.session.commit()
         
-        # Imprimir recibo de venta
-        try:
-            from flask import current_app
-            printer = get_printer(current_app)
-            total_con_envio = float(pedido.total) + float(pedido.costo_envio or 0)
-            printer.imprimir_pedido(pedido, cliente, productos, total_con_envio)
-        except Exception as e:
-            print(f"Error al imprimir recibo delivery: {str(e)}")
+        # NO imprimir al cobrar - se imprime al enviar
         
         # Retornar el partial de estado actualizado (no vista de pago confirmado)
         costo_envio = pedido.costo_envio if pedido.costo_envio else 0
