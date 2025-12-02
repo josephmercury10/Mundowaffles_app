@@ -261,8 +261,13 @@ def finalizar_pedido():
         session.pop('pedido_data', None)
         session.pop('costo_envio', None)
 
-        return render_template('ventas/delivery/_partials/pedido_confirmado.html',
-                             venta_id=venta.id)
+        # Respuesta con trigger para refrescar tablas
+        response = make_response(
+            render_template('ventas/delivery/_partials/pedido_confirmado.html',
+                          venta_id=venta.id)
+        )
+        response.headers['HX-Trigger'] = 'refresh-pendientes'
+        return response
         
     except Exception as e:
         db.session.rollback()
