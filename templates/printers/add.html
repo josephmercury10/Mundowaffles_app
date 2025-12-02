@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block right_panel %}
+<div class="p-3">
+  <h4>Nueva Impresora</h4>
+  <form method="post" class="mt-3">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Nombre</label>
+        <input name="nombre" class="form-control" required />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Driver (Windows)</label>
+        <input name="driver_name" class="form-control" placeholder="EPSON TM-T88V Receipt5" required />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-select">
+          <option value="ticket">ticket</option>
+          <option value="comanda">comanda</option>
+          <option value="factura">factura</option>
+          <option value="cocina">cocina</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Perfil</label>
+        <select name="perfil" class="form-select">
+          <option value="general">general</option>
+          <option value="delivery">delivery</option>
+          <option value="mostrador">mostrador</option>
+          <option value="cocina">cocina</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Ancho caracteres</label>
+        <input type="number" name="ancho_caracteres" class="form-control" value="42" />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Feed lines</label>
+        <input type="number" name="feed_lines" class="form-control" value="3" />
+      </div>
+      <div class="col-md-4 form-check align-self-end">
+        <input type="checkbox" name="cortar_papel" id="cortar_papel" class="form-check-input" checked />
+        <label for="cortar_papel" class="form-check-label">Cortar papel</label>
+      </div>
+    </div>
+    <div class="mt-3">
+      <button class="btn btn-primary" type="submit">Guardar</button>
+      <a class="btn btn-secondary" href="{{ url_for('printers.index') }}">Volver</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

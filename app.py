@@ -16,6 +16,7 @@ from routes.clientes import clientes_bp
 from routes.ventas import ventas_bp
 from routes.pruebas import pruebas_bp
 from routes.delivery import delivery_bp
+from routes.printers import printers_bp
 from routes.mostrador import mostrador_bp
 
 
@@ -42,6 +43,7 @@ app.register_blueprint(clientes_bp)
 app.register_blueprint(ventas_bp)
 app.register_blueprint(pruebas_bp)
 app.register_blueprint(delivery_bp)
+app.register_blueprint(printers_bp)
 app.register_blueprint(mostrador_bp)
 
 # Ruta raíz - redirige a mostrador

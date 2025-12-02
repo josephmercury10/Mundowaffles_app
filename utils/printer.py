@@ -521,3 +521,21 @@ def get_printer(app=None):
     
     printer_name = app.config.get('PRINTER_NAME', None)
     return ThermalPrinter(printer_name)
+
+
+def get_printer_by_profile(perfil: str, tipo: str = None, app=None):
+    """
+    Obtiene una instancia de ThermalPrinter según el perfil/tipo configurado en BD.
+    Si no hay coincidencia, cae al valor de config `PRINTER_NAME`.
+    """
+    if app is None:
+        from flask import current_app
+        app = current_app
+    try:
+        from utils.printer_manager import obtener_por_perfil
+        pr = obtener_por_perfil(perfil, tipo)
+        if pr and pr.driver_name:
+            return ThermalPrinter(pr.driver_name)
+    except Exception:
+        pass
+    return get_printer(app)
