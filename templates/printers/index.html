@@ -5,6 +5,16 @@
     <h4>Gestión de Impresoras</h4>
     <a href="{{ url_for('printers.add') }}" class="btn btn-primary">Agregar Impresora</a>
   </div>
+  <div class="alert alert-info d-flex justify-content-between align-items-center">
+    <div>
+      <strong>Print Host:</strong> Necesitas el servicio local para imprimir desde el navegador.
+      <div id="ph-status" class="small text-muted">Verificando servicio...</div>
+    </div>
+    <div>
+      <a href="#" class="btn btn-outline-primary" onclick="verificarHost();return false;">Verificar</a>
+      <a href="https://tudominio.com/downloads/MundoWaffles_PrintHost_Setup.exe" class="btn btn-success">Descargar Print Host</a>
+    </div>
+  </div>
   <form method="get" class="mb-3">
     <div class="row g-2">
       <div class="col-md-6">
@@ -84,4 +94,33 @@
     </table>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function verificarHost(){
+  const el = document.getElementById('ph-status');
+  el.textContent = 'Verificando servicio...';
+  try {
+    const r = await fetch('http://127.0.0.1:8765/health', { method: 'GET' });
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    if (d && d.status === 'ok') {
+      el.textContent = 'Host activo: v'+(d.version||'');
+      el.classList.remove('text-muted');
+      el.classList.add('text-success');
+    } else {
+      el.textContent = 'Host no responde.';
+      el.classList.remove('text-success');
+      el.classList.add('text-danger');
+    }
+  } catch (e) {
+    el.textContent = 'Host no disponible. Instala/Inicia el Print Host.';
+    el.classList.remove('text-success');
+    el.classList.add('text-danger');
+  }
+}
+// Verificación automática al cargar la página
+verificarHost();
+</script>
 {% endblock %}

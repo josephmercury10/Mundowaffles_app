@@ -1,7 +1,14 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import win32print
 
 app = Flask(__name__)
+CORS(app)
+
+
+@app.get('/health')
+def health():
+    return jsonify({'status': 'ok', 'version': '1.0.0'})
 
 
 @app.post('/print/raw')
