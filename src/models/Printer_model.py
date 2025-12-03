@@ -9,8 +9,8 @@ class Printer(db.Model):
     id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(100), nullable=False)  # Nombre amigable en la app
     driver_name = db.Column(db.String(150), nullable=False)  # Nombre del dispositivo en Windows
-    tipo = db.Column(db.String(30), nullable=False, default='ticket')  # ticket|comanda|factura|cocina
-    perfil = db.Column(db.String(30), nullable=False, default='general')  # general|delivery|mostrador|cocina
+    tipo = db.Column(db.Text, nullable=False)  # JSON array: ["ticket","comanda","factura","cocina"]
+    perfil = db.Column(db.Text, nullable=False)  # JSON array: ["general","delivery","mostrador","cocina"]
     ancho_caracteres = db.Column(db.SmallInteger, nullable=False, default=42)
     cortar_papel = db.Column(db.Boolean, nullable=False, default=True)
     feed_lines = db.Column(db.SmallInteger, nullable=False, default=3)

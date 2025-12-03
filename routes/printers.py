@@ -25,12 +25,18 @@ def index():
 def add():
     if request.method == 'POST':
         try:
+            import json
             data = request.form
+            tipos = request.form.getlist('tipo')  # múltiples valores
+            perfiles = request.form.getlist('perfil')
+            if not tipos or not perfiles:
+                flash('Debes seleccionar al menos un tipo y un perfil', 'warning')
+                return render_template('printers/add.html')
             printer = Printer(
                 nombre=data.get('nombre', '').strip(),
                 driver_name=data.get('driver_name', '').strip(),
-                tipo=data.get('tipo', 'ticket'),
-                perfil=data.get('perfil', 'general'),
+                tipo=json.dumps(tipos),
+                perfil=json.dumps(perfiles),
                 ancho_caracteres=int(data.get('ancho_caracteres', 42) or 42),
                 cortar_papel=data.get('cortar_papel') == 'on',
                 feed_lines=int(data.get('feed_lines', 3) or 3),
@@ -51,11 +57,17 @@ def update(printer_id: int):
     printer = Printer.query.get_or_404(printer_id)
     if request.method == 'POST':
         try:
+            import json
             data = request.form
+            tipos = request.form.getlist('tipo')
+            perfiles = request.form.getlist('perfil')
+            if not tipos or not perfiles:
+                flash('Debes seleccionar al menos un tipo y un perfil', 'warning')
+                return render_template('printers/update.html', printer=printer)
             printer.nombre = data.get('nombre', printer.nombre).strip()
             printer.driver_name = data.get('driver_name', printer.driver_name).strip()
-            printer.tipo = data.get('tipo', printer.tipo)
-            printer.perfil = data.get('perfil', printer.perfil)
+            printer.tipo = json.dumps(tipos)
+            printer.perfil = json.dumps(perfiles)
             printer.ancho_caracteres = int(data.get('ancho_caracteres', printer.ancho_caracteres) or printer.ancho_caracteres)
             printer.cortar_papel = data.get('cortar_papel') == 'on'
             printer.feed_lines = int(data.get('feed_lines', printer.feed_lines) or printer.feed_lines)

@@ -13,22 +13,46 @@
         <input name="driver_name" class="form-control" placeholder="EPSON TM-T88V Receipt5" required />
       </div>
       <div class="col-md-4">
-        <label class="form-label">Tipo</label>
-        <select name="tipo" class="form-select">
-          <option value="ticket">ticket</option>
-          <option value="comanda">comanda</option>
-          <option value="factura">factura</option>
-          <option value="cocina">cocina</option>
-        </select>
+        <label class="form-label">Tipo (selecciona uno o más)</label>
+        <div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tipo" value="ticket" id="tipo_ticket">
+            <label class="form-check-label" for="tipo_ticket">ticket</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tipo" value="comanda" id="tipo_comanda">
+            <label class="form-check-label" for="tipo_comanda">comanda</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tipo" value="factura" id="tipo_factura">
+            <label class="form-check-label" for="tipo_factura">factura</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="tipo" value="cocina" id="tipo_cocina">
+            <label class="form-check-label" for="tipo_cocina">cocina</label>
+          </div>
+        </div>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Perfil</label>
-        <select name="perfil" class="form-select">
-          <option value="general">general</option>
-          <option value="delivery">delivery</option>
-          <option value="mostrador">mostrador</option>
-          <option value="cocina">cocina</option>
-        </select>
+        <label class="form-label">Perfil (selecciona uno o más)</label>
+        <div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="perfil" value="general" id="perfil_general">
+            <label class="form-check-label" for="perfil_general">general</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="perfil" value="delivery" id="perfil_delivery">
+            <label class="form-check-label" for="perfil_delivery">delivery</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="perfil" value="mostrador" id="perfil_mostrador">
+            <label class="form-check-label" for="perfil_mostrador">mostrador</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="perfil" value="cocina" id="perfil_cocina">
+            <label class="form-check-label" for="perfil_cocina">cocina</label>
+          </div>
+        </div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Ancho caracteres</label>

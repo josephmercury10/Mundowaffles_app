@@ -22,8 +22,8 @@ def upgrade() -> None:
         sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
         sa.Column('nombre', sa.String(length=100), nullable=False),
         sa.Column('driver_name', sa.String(length=150), nullable=False),
-        sa.Column('tipo', sa.String(length=30), nullable=False, server_default='ticket'),
-        sa.Column('perfil', sa.String(length=30), nullable=False, server_default='general'),
+        sa.Column('tipo', sa.Text(), nullable=False),  # JSON array
+        sa.Column('perfil', sa.Text(), nullable=False),  # JSON array
         sa.Column('ancho_caracteres', sa.SmallInteger(), nullable=False, server_default='42'),
         sa.Column('cortar_papel', sa.Boolean(), nullable=False, server_default=sa.text('1')),
         sa.Column('feed_lines', sa.SmallInteger(), nullable=False, server_default='3'),

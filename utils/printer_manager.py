@@ -14,10 +14,18 @@ def listar_impresoras_windows() -> List[str]:
 
 
 def obtener_por_perfil(perfil: str, tipo: Optional[str] = None) -> Optional[Printer]:
-    q = Printer.query.filter_by(estado=1, perfil=perfil)
-    if tipo:
-        q = q.filter_by(tipo=tipo)
-    return q.order_by(Printer.created_at.desc()).first()
+    import json
+    printers = Printer.query.filter_by(estado=1).all()
+    for p in printers:
+        try:
+            perfiles = json.loads(p.perfil) if isinstance(p.perfil, str) else p.perfil
+            tipos = json.loads(p.tipo) if isinstance(p.tipo, str) else p.tipo
+            if perfil in perfiles:
+                if tipo is None or tipo in tipos:
+                    return p
+        except:
+            continue
+    return None
 
 
 def guardar_driver(printer_id: int, driver_name: str) -> bool:

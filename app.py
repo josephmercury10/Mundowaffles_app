@@ -18,6 +18,7 @@ from routes.pruebas import pruebas_bp
 from routes.delivery import delivery_bp
 from routes.printers import printers_bp
 from routes.mostrador import mostrador_bp
+from routes.api_print import api_print_bp
 
 
 app = Flask(__name__)
@@ -45,6 +46,7 @@ app.register_blueprint(pruebas_bp)
 app.register_blueprint(delivery_bp)
 app.register_blueprint(printers_bp)
 app.register_blueprint(mostrador_bp)
+app.register_blueprint(api_print_bp)
 
 # Ruta raíz - redirige a mostrador
 @app.route('/')

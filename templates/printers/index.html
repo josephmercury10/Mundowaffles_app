@@ -54,8 +54,8 @@
           <td>{{ p.id }}</td>
           <td>{{ p.nombre }}</td>
           <td><code>{{ p.driver_name }}</code></td>
-          <td>{{ p.tipo }}</td>
-          <td>{{ p.perfil }}</td>
+          <td>{{ (p.tipo|from_json)|join(', ') }}</td>
+          <td>{{ (p.perfil|from_json)|join(', ') }}</td>
           <td>{{ p.ancho_caracteres }}</td>
           <td>{{ p.feed_lines }}</td>
           <td>
